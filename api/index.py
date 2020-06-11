@@ -3,7 +3,6 @@ from flask import Flask, jsonify, send_file
 import time
 from PIL import Image
 import io
-import sys
 import traceback
 app = Flask(__name__)
 
