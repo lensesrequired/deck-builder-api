@@ -38,7 +38,7 @@ class Photo(Resource):
         img_io = io.BytesIO()
         try:
             script_dir = os.path.dirname(__file__)
-            rel_path = "public/01.png"
+            rel_path = "../public/01.png"
             abs_file_path = os.path.join(script_dir, rel_path)
             print("path", abs_file_path)
             image = Image.open(abs_file_path)
