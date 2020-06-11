@@ -6,8 +6,10 @@ import time
 from PIL import Image
 from flask_restx import Resource, Api
 from werkzeug.middleware.proxy_fix import ProxyFix
+from flask_cors import CORS
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"*": {"origins": "*"}})
 app.wsgi_app = ProxyFix(app.wsgi_app)
 api = Api(app,
           version='0.1',
