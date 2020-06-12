@@ -7,6 +7,7 @@ from PIL import Image
 from flask_restx import Resource, Api
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
+import requests
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -31,18 +32,15 @@ class Time(Resource):
         return jsonify(time=time.time())
 
 
-@api.route('/photo')
+@api.route('/photo/<path:photo_type>/<path:photo_name>')
 class Photo(Resource):
-    def get(self):
+    def get(self, photo_type, photo_name):
         print('photo')
         img_io = io.BytesIO()
         try:
-            script_dir = os.path.dirname(__file__)
-            rel_path = "../public/01.png"
-            abs_file_path = os.path.join(script_dir, rel_path)
-            print("path", abs_file_path)
-            image = Image.open(abs_file_path)
-            image.save(img_io, 'PNG', quality=70)
+            photo = requests.get('https://deck-builder-cards.now.sh/' + photo_type + '/' + photo_name)
+            img = Image.open(io.BytesIO(photo.content))
+            img.save(img_io, 'PNG', quality=70)
             img_io.seek(0)
         except Exception as error:
             print('error', error)
