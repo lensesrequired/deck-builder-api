@@ -13,8 +13,8 @@ cors = CORS(app, resources={r"*": {"origins": "*"}})
 app.wsgi_app = ProxyFix(app.wsgi_app)
 api = Api(app,
           version='0.1',
-          title='Our sample API',
-          description='This is our sample API'
+          title='Deck Builder API',
+          description='This is API'
           )
 
 CardModel = card.model(api)
@@ -45,7 +45,7 @@ class Card(Resource):
     @api.expect(CardModel)
     def post(self):
         payload = api.payload
-        img, font_color = card_creator.get_art(payload['art'].split('/'))
+        img, font_color = card_creator.get_art(payload.get('art', '').split('/'))
         img_io = io.BytesIO()
 
         card_creator.create_card(payload, img, font_color)
