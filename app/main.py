@@ -7,8 +7,8 @@ from flask_restx import Resource, Api
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
 import requests
-from models import card
-from card_helpers import creation as card_creator
+from .models import card
+from .card_helpers import creation as card_creator
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})

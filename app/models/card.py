@@ -1,6 +1,6 @@
 from flask_restx import fields
 import uuid
-from models import action
+from . import action
 
 
 class ActionType(fields.Integer):
