@@ -1,12 +1,10 @@
 import io
 import traceback
-from flask import Flask, jsonify, send_file
-import time
+from flask import Flask, send_file, request
 from PIL import Image
 from flask_restx import Resource, Api
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
-import requests
 from .models import card
 from .card_helpers import creation as card_creator
 
@@ -19,33 +17,41 @@ api = Api(app,
           description='This is our sample API'
           )
 
-
-@api.route('/hello_world')
-class HelloWorld(Resource):
-    def get(self):
-        return {'hello': 'world'}
+CardModel = card.model(api)
 
 
-@api.route('/time')
-class Time(Resource):
-    def get(self):
-        print('time')
-        return jsonify(time=time.time())
-
-
-@api.route('/photo/<path:photo_type>/<path:photo_name>')
+@api.route('/photo/<path:photo_type>')
 class Photo(Resource):
-    def get(self, photo_type, photo_name):
+    @api.doc(params={'name': 'photo name'})
+    def get(self, photo_type):
         print('photo')
+        photo_name = request.args.get('name')
+        if (photo_name is not None):
+            img_io = io.BytesIO()
+            try:
+                photo = card_creator.get_photo(photo_type, photo_name)
+                img = Image.open(io.BytesIO(photo.content))
+                img.save(img_io, 'PNG', quality=70)
+                img_io.seek(0)
+            except Exception as error:
+                print('error', error)
+                traceback.print_tb(error.__traceback__)
+            return send_file(img_io, mimetype='image/png')
+        return "Hello"
+
+
+@api.route('/card')
+class Card(Resource):
+    @api.expect(CardModel)
+    def post(self):
+        payload = api.payload
+        img, font_color = card_creator.get_art(payload['art'].split('/'))
         img_io = io.BytesIO()
-        try:
-            photo = requests.get('https://deck-builder-cards.now.sh/' + photo_type + '/' + photo_name)
-            img = Image.open(io.BytesIO(photo.content))
-            img.save(img_io, 'PNG', quality=70)
-            img_io.seek(0)
-        except Exception as error:
-            print('error', error)
-            traceback.print_tb(error.__traceback__)
+
+        card_creator.create_card(payload, img, font_color)
+
+        img.save(img_io, 'PNG', quality=70)
+        img_io.seek(0)
         return send_file(img_io, mimetype='image/png')
 
 
