@@ -31,8 +31,8 @@ def create_text(text, draw, width, height, font, font_color):
 def create_card(card, background, font_color):
     width, height = background.size
     draw = ImageDraw.Draw(background)
-    title_font = ImageFont.truetype(os.path.abspath("app/fonts/RobotoSlab-ExtraBold.ttf"), 56)
-    reg_font = ImageFont.truetype(os.path.abspath("app/fonts/RobotoSlab-Regular.ttf"), 30)
+    title_font = ImageFont.truetype(os.path.abspath("app/fonts/RobotoSlab-ExtraBold.ttf"), 64)
+    reg_font = ImageFont.truetype(os.path.abspath("app/fonts/RobotoSlab-Regular.ttf"), 40)
 
     title = card['name']
     para = textwrap.wrap(title, width=21)
@@ -44,7 +44,7 @@ def create_card(card, background, font_color):
 
     points = 'VP: ' + str(card['victoryPoints'])
     w, h = title_font.getsize(points)
-    draw.text((width - (w / 2) - 30, 20), points, font=reg_font, fill=font_color)
+    draw.text((width - (w / 2) - 40, 20), points, font=reg_font, fill=font_color)
 
     cost = 'Cost: ' + str(card['costBuy'])
     draw.text((25, 20), cost, font=reg_font, fill=font_color)
