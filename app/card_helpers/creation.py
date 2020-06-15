@@ -29,6 +29,7 @@ def create_text(text, draw, width, height, font, font_color):
 
 
 def create_card(card, background, font_color):
+    # TODO: use dict.get to set default values for all items
     width, height = background.size
     draw = ImageDraw.Draw(background)
     title_font = ImageFont.truetype(os.path.abspath("app/fonts/RobotoSlab-ExtraBold.ttf"), 64)

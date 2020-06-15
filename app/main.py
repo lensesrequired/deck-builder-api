@@ -37,6 +37,7 @@ class Photo(Resource):
                 print('error', error)
                 traceback.print_tb(error.__traceback__)
             return send_file(img_io, mimetype='image/png')
+        # TODO: Return all files of type (this is for ui photo selector)
         return "Hello"
 
 
