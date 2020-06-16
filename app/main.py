@@ -32,7 +32,6 @@ decksCollection = db.decks
 class Photo(Resource):
     @api.doc(params={'name': 'photo name'})
     def get(self, photo_type):
-        print('photo')
         photo_name = request.args.get('name')
         if (photo_name is not None):
             img_io = io.BytesIO()
@@ -65,14 +64,14 @@ class Deck(Resource):
         deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
         if (deck is not None):
             deck['_id'] = str(deck['_id'])
-            for cardData in deck.get('cards', []):
-                img, font_color = card_creator.get_art(cardData.get('art', '').split('/'))
+            for card_data in deck.get('cards', []):
+                img, font_color = card_creator.get_art(card_data.get('art', '').split('/'))
                 img_io = io.BytesIO()
 
-                card_creator.create_card(cardData, img, font_color)
+                card_creator.create_card(card_data, img, font_color)
 
                 img.save(img_io, format='PNG')
-                cardData['image'] = base64.encodebytes(img_io.getvalue()).decode('ascii')
+                card_data['image'] = base64.encodebytes(img_io.getvalue()).decode('ascii')
             return jsonify(deck)
         # TODO: Return 404
 
@@ -80,13 +79,11 @@ class Deck(Resource):
 @api.route('/cards/<path:deck_id>')
 class Card(Resource):
     @api.expect([CardModel])
-    def patch(self, deck_id):
+    def put(self, deck_id):
         deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
         if (deck is not None):
             deck['_id'] = str(deck['_id'])
-            print(deck)
-            new_cards = [*deck['cards'], *api.payload]
-            decksCollection.update_one({'_id': ObjectId(deck_id)}, {"$set": {"cards": new_cards}})
+            decksCollection.update_one({'_id': ObjectId(deck_id)}, {"$set": {"cards": api.payload}})
             return "OK"
         # TODO: Return 404
         return "Not OK"
