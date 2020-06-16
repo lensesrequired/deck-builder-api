@@ -1,6 +1,6 @@
 import io
 import traceback
-from flask import Flask, send_file, request, jsonify
+from flask import Flask, send_file, request, jsonify, after_this_request
 from PIL import Image
 from flask_restx import Resource, Api
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -11,7 +11,7 @@ from .deck_helpers import creation as deck_creator
 import pymongo
 from bson.objectid import ObjectId
 import base64
-import uuid
+import os
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -86,8 +86,14 @@ class Deck(Resource):
 class Deck(Resource):
     def get(self, deck_id, download_id):
         deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
-        print(deck)
         if (deck is not None):
+            @after_this_request
+            def remove_file(response):
+                os.remove(
+                    os.path.dirname(
+                        os.path.abspath(__file__)) + "/../pdfs/deck_" + deck_id + "_" + download_id + ".pdf")
+                return response
+
             pdf_pages = deck_creator.create_pdf(deck.get('cards', []))
             for page in pdf_pages:
                 page.convert('RGB')
