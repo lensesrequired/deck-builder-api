@@ -82,15 +82,13 @@ class Deck(Resource):
         # TODO: Return 404
 
 
-@api.route('/deck/<path:deck_id>/pdf')
+@api.route('/deck/<path:deck_id>/pdf/<path:download_id>')
 class Deck(Resource):
-    def get(self, deck_id):
+    def get(self, deck_id, download_id):
         deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
         print(deck)
         if (deck is not None):
             pdf_pages = deck_creator.create_pdf(deck.get('cards', []))
-            download_id = str(uuid.uuid1())
-            print(download_id)
             for page in pdf_pages:
                 page.convert('RGB')
             if (len(pdf_pages)):
