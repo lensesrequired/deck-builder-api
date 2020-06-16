@@ -11,6 +11,7 @@ from .deck_helpers import creation as deck_creator
 import pymongo
 from bson.objectid import ObjectId
 import base64
+import uuid
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -87,11 +88,13 @@ class Deck(Resource):
         deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
         if (deck is not None):
             pdf_pages = deck_creator.create_pdf(deck.get('cards', []))
+            download_id = uuid.uuid1()
             for page in pdf_pages:
                 page.convert('RGB')
             if (len(pdf_pages)):
-                pdf_pages[0].save("pdfs/deck_" + deck_id + ".pdf", save_all=True, append_images=pdf_pages[1:])
-            return send_file("../pdfs/deck_" + deck_id + ".pdf", mimetype='application/pdf')
+                pdf_pages[0].save("pdfs/deck_" + deck_id + "_" + download_id + ".pdf", save_all=True,
+                                  append_images=pdf_pages[1:])
+            return send_file("../pdfs/deck_" + deck_id + "_" + download_id + ".pdf", mimetype='application/pdf')
         # TODO: Return 404
 
 
