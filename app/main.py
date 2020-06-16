@@ -86,9 +86,11 @@ class Deck(Resource):
 class Deck(Resource):
     def get(self, deck_id):
         deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
+        print(deck)
         if (deck is not None):
             pdf_pages = deck_creator.create_pdf(deck.get('cards', []))
-            download_id = uuid.uuid1()
+            download_id = str(uuid.uuid1())
+            print(download_id)
             for page in pdf_pages:
                 page.convert('RGB')
             if (len(pdf_pages)):
