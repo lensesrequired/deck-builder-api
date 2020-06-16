@@ -9,6 +9,7 @@ from .models import card
 from .card_helpers import creation as card_creator
 import pymongo
 from bson.objectid import ObjectId
+import base64
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -58,29 +59,37 @@ class Deck(Resource):
         return str(deck_id)
 
 
-@api.route('/deck/<path:id>')
+@api.route('/deck/<path:deck_id>')
 class Deck(Resource):
-    def get(self, id):
-        deck = decksCollection.find_one({'_id': ObjectId(id)})
+    def get(self, deck_id):
+        deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
         if (deck is not None):
             deck['_id'] = str(deck['_id'])
+            for cardData in deck.get('cards', []):
+                img, font_color = card_creator.get_art(cardData.get('art', '').split('/'))
+                img_io = io.BytesIO()
+
+                card_creator.create_card(cardData, img, font_color)
+
+                img.save(img_io, format='PNG')
+                cardData['image'] = base64.encodebytes(img_io.getvalue()).decode('ascii')
             return jsonify(deck)
         # TODO: Return 404
 
 
-@api.route('/card')
+@api.route('/cards/<path:deck_id>')
 class Card(Resource):
-    @api.expect(CardModel)
-    def post(self):
-        payload = api.payload
-        img, font_color = card_creator.get_art(payload.get('art', '').split('/'))
-        img_io = io.BytesIO()
-
-        card_creator.create_card(payload, img, font_color)
-
-        img.save(img_io, 'PNG', quality=70)
-        img_io.seek(0)
-        return send_file(img_io, mimetype='image/png')
+    @api.expect([CardModel])
+    def patch(self, deck_id):
+        deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
+        if (deck is not None):
+            deck['_id'] = str(deck['_id'])
+            print(deck)
+            new_cards = [*deck['cards'], *api.payload]
+            decksCollection.update_one({'_id': ObjectId(deck_id)}, {"$set": {"cards": new_cards}})
+            return "OK"
+        # TODO: Return 404
+        return "Not OK"
 
 
 if __name__ == '__main__':
