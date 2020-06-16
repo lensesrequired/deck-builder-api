@@ -7,6 +7,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
 from .models import card
 from .card_helpers import creation as card_creator
+from .deck_helpers import creation as deck_creator
 import pymongo
 from bson.objectid import ObjectId
 import base64
@@ -22,10 +23,14 @@ api = Api(app,
 
 CardModel = card.model(api)
 
-client = pymongo.MongoClient(
-    "mongodb+srv://dbUser:some-password@deckbuilder-crpyz.mongodb.net/deckbuilder?retryWrites=true&w=majority")
-db = client.deckbuilder
-decksCollection = db.decks
+try:
+    client = pymongo.MongoClient(
+        "mongodb+srv://dbUser:some-password@deckbuilder-crpyz.mongodb.net/deckbuilder?retryWrites=true&w=majority")
+    db = client.deckbuilder
+    decksCollection = db.decks
+except Exception as error:
+    print('error', error)
+    traceback.print_tb(error.__traceback__)
 
 
 @api.route('/photo/<path:photo_type>')
@@ -73,6 +78,20 @@ class Deck(Resource):
                 img.save(img_io, format='PNG')
                 card_data['image'] = base64.encodebytes(img_io.getvalue()).decode('ascii')
             return jsonify(deck)
+        # TODO: Return 404
+
+
+@api.route('/deck/<path:deck_id>/pdf')
+class Deck(Resource):
+    def get(self, deck_id):
+        deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
+        if (deck is not None):
+            pdf_pages = deck_creator.create_pdf(deck.get('cards', []))
+            for page in pdf_pages:
+                page.convert('RGB')
+            if (len(pdf_pages)):
+                pdf_pages[0].save("pdfs/deck_" + deck_id + ".pdf", save_all=True, append_images=pdf_pages[1:])
+            return send_file("../pdfs/deck_" + deck_id + ".pdf", mimetype='application/pdf')
         # TODO: Return 404
 
 

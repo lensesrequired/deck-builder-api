@@ -10,6 +10,11 @@ def get_photo(photo_type, name):
 
 
 def get_art(art):
+    """
+    returns tuple containing PIL_image, font_color
+    given a list of two strings, a photo type and photo name, returns a card background with that photo
+    otherwise returns a white background
+    """
     img = Image.new('RGB', (715, 1000), (255, 255, 255))
     font_color = "black"
     if (len(art) == 2):
