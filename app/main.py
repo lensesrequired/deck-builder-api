@@ -1,12 +1,14 @@
 import io
 import traceback
-from flask import Flask, send_file, request
+from flask import Flask, send_file, request, jsonify
 from PIL import Image
 from flask_restx import Resource, Api
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
 from .models import card
 from .card_helpers import creation as card_creator
+import pymongo
+from bson.objectid import ObjectId
 
 app = Flask(__name__)
 cors = CORS(app, resources={r"*": {"origins": "*"}})
@@ -18,6 +20,11 @@ api = Api(app,
           )
 
 CardModel = card.model(api)
+
+client = pymongo.MongoClient(
+    "mongodb+srv://dbUser:some-password@deckbuilder-crpyz.mongodb.net/deckbuilder?retryWrites=true&w=majority")
+db = client.deckbuilder
+decksCollection = db.decks
 
 
 @api.route('/photo/<path:photo_type>')
@@ -39,6 +46,26 @@ class Photo(Resource):
             return send_file(img_io, mimetype='image/png')
         # TODO: Return all files of type (this is for ui photo selector)
         return "Hello"
+
+
+@api.route('/deck')
+class Deck(Resource):
+    def post(self):
+        new_deck = {
+            'cards': []
+        }
+        deck_id = decksCollection.insert_one(new_deck).inserted_id
+        return str(deck_id)
+
+
+@api.route('/deck/<path:id>')
+class Deck(Resource):
+    def get(self, id):
+        deck = decksCollection.find_one({'_id': ObjectId(id)})
+        if (deck is not None):
+            deck['_id'] = str(deck['_id'])
+            return jsonify(deck)
+        # TODO: Return 404
 
 
 @api.route('/card')
