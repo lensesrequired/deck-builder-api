@@ -7,6 +7,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
 from .models import card
 from .card_helpers import creation as card_creator
+from .card_helpers import art_files
 from .deck_helpers import creation as deck_creator
 import pymongo
 from bson.objectid import ObjectId
@@ -50,8 +51,8 @@ class Photo(Resource):
                 print('error', error)
                 traceback.print_tb(error.__traceback__)
             return send_file(img_io, mimetype='image/png')
-        # TODO: Return all files of type (this is for ui photo selector)
-        return "Hello"
+        # TODO: Return all file names of type (this is for ui photo selector)
+        return jsonify(art_files.card_types.get(photo_type, []))
 
 
 @api.route('/deck')
