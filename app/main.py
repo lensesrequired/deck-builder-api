@@ -30,6 +30,7 @@ try:
         "mongodb+srv://dbUser:some-password@deckbuilder-crpyz.mongodb.net/deckbuilder?retryWrites=true&w=majority")
     db = client.deckbuilder
     decksCollection = db.decks
+    gamesCollection = db.games
 except Exception as error:
     print('error', error)
     traceback.print_tb(error.__traceback__)
@@ -114,6 +115,32 @@ class Card(Resource):
             deck['_id'] = str(deck['_id'])
             decksCollection.update_one({'_id': ObjectId(deck_id)}, {"$set": {"cards": api.payload}})
             return "OK"
+        # TODO: Return 404
+        return "Not OK"
+
+
+@api.route('/games/create/<path:deck_id>')
+class Game(Resource):
+    def post(self, deck_id):
+        new_game = {
+            'deck_id': deck_id,
+            'settings': {},
+            'curr_player': -1,
+            'players': [],
+            'decks': []
+        }
+        game_id = gamesCollection.insert_one(new_game).inserted_id
+        return str(game_id)
+
+
+@api.route('/games/<path:game_id>')
+class Game(Resource):
+    @api.expect([CardModel])
+    def get(self, deck_id):
+        game = gamesCollection.find_one({'_id': ObjectId(deck_id)})
+        if (game is not None):
+            game['_id'] = str(game['_id'])
+            return jsonify(game)
         # TODO: Return 404
         return "Not OK"
 
