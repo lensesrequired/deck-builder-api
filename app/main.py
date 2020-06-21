@@ -124,10 +124,21 @@ class Game(Resource):
     def post(self, deck_id):
         new_game = {
             'deck_id': deck_id,
-            'settings': {},
+            'settings': {
+                'num_players': 0,
+                'starting_deck': [],
+                'starting_hand': [],
+                'turn': {
+                    'pre': [],
+                    'during': [],
+                    'post': []
+                }
+            },
             'curr_player': -1,
             'players': [],
-            'decks': []
+            'marketplace': [],
+            'discard': [],
+            'destroy': []
         }
         game_id = gamesCollection.insert_one(new_game).inserted_id
         return str(game_id)
