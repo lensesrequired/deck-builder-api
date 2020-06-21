@@ -156,6 +156,7 @@ class Game(Resource):
         # TODO: Return 404
         return "Not OK"
 
+    @api.expect(GameModel)
     def patch(self, game_id):
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
@@ -178,7 +179,7 @@ class Game(Resource):
                 'hand': [],
                 'discard': [],
                 'current_turn': dict()
-            } for i in range(api.payload['numPlayers'])]
+            } for i in range(int(api.payload['numPlayers']))]
             marketplace = api.payload['marketplace']
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {"settings": settings, "players": players,
