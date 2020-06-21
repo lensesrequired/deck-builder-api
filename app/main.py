@@ -147,7 +147,7 @@ class Game(Resource):
 
 @api.route('/games/<path:game_id>')
 class Game(Resource):
-    # @api.marshal_with(GameModel)
+    @api.marshal_with(GameModel)
     def get(self, game_id):
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
@@ -161,6 +161,7 @@ class Game(Resource):
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
             game['_id'] = str(game['_id'])
+            print(api.payload)
             settings = {
                 'num_players': int(api.payload['numPlayers']),
                 'starting_deck': api.payload['startingDeck'],
