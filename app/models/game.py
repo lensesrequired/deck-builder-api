@@ -43,7 +43,7 @@ def GameModel(api):
         "settings": fields.Nested(SettingsModel(api)),
         "curr_player": fields.Integer(min=0),
         "players": fields.List(fields.Nested(PlayerModel(api))),
-        "marketplace": fields.List((DeckModel(api))),
+        "marketplace": DeckModel(api),
         "discard": DeckModel(api),
         "destroy": DeckModel(api)
     }

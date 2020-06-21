@@ -183,7 +183,7 @@ class Game(Resource):
             marketplace = api.payload['marketplace']
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {"settings": settings, "players": players,
-                                                 "marketplace": marketplace}})
+                                                 "marketplace": marketplace, 'curr_player': 0}})
             return "OK"
         # TODO: Return 404
         return "Not OK"
