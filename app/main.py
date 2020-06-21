@@ -157,7 +157,7 @@ class Game(Resource):
         return "Not OK"
 
     @api.expect(GameModel)
-    def patch(self, game_id):
+    def put(self, game_id):
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
             game['_id'] = str(game['_id'])
