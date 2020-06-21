@@ -8,7 +8,7 @@ from flask_cors import CORS
 from .models import card, game
 from .card_helpers import creation as card_creator
 from .card_helpers import art_files
-from .deck_helpers import creation as deck_creator
+from .deck_helpers import creation as deck_creator, utils as deck_utils
 import pymongo
 from bson.objectid import ObjectId
 import base64
@@ -200,8 +200,30 @@ class Game(Resource):
             marketplace = api.payload['marketplace']
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {"settings": settings, "players": players,
-                                                 "marketplace": marketplace, 'curr_player': 0}})
+                                                 "marketplace": marketplace}})
             return "OK"
+        # TODO: Return 404
+        return "Not OK"
+
+
+@api.route('/games/<path:game_id>/start')
+class Game(Resource):
+    def setupPlayer(self, player, starting_hand_size):
+        player['deck'] = deck_utils.shuffle(player['deck'], len(player['deck']))
+        hand = []
+        for i in range(starting_hand_size):
+            hand.append(player['deck'].pop())
+        player['hand'] = hand
+        return player
+
+    def post(self, game_id):
+        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+        if (game is not None):
+            game['_id'] = str(game['_id'])
+            players = [self.setupPlayer(player, game['settings']['starting_hand_size']) for player in game['players']]
+            gamesCollection.update_one({'_id': ObjectId(game_id)},
+                                       {"$set": {"curr_player": 0, 'players': players}})
+            return jsonify(game)
         # TODO: Return 404
         return "Not OK"
 
