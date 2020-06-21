@@ -7,7 +7,7 @@ class ActionType(fields.String):
 
 ActionModel = {
     "type": ActionType,
-    "required": fields.boolean,
+    "reqed": fields.boolean,
     "qty": fields.Integer
 }
 
