@@ -156,11 +156,8 @@ class Game(Resource):
         # TODO: Return 404
         return "Not OK"
 
-
-@api.route('/settings/<path:game_id>')
-class GameSettings(Resource):
     @api.expect(GameModel)
-    def put(self, game_id):
+    def patch(self, game_id):
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
             game['_id'] = str(game['_id'])
