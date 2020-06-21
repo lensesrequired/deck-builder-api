@@ -57,22 +57,12 @@ def create_card(card, background, font_color):
 
     actions = card["actions"]
     height = height * 3 / 4
-    discard = actions["discardQty"]
-    destroy = actions["destroyQty"]
-    additions = actions["additions"]
-    buying_power = actions["buyingPower"]
-    if (discard):
-        discard = str(discard)
-        text = ("Discard " if actions["discardRequired"] else "You may discard ") + discard + " card"
-        height += create_text(text, draw, width, height, reg_font, font_color)
-    if (destroy):
-        destroy = str(destroy)
-        text = ("Destroy " if actions["destroyRequired"] else "You may destroy ") + destroy + " card"
-        height += create_text(text, draw, width, height, reg_font, font_color)
-    for addition in additions:
-        additionQty = str(addition['qty'])
-        additionType = str(addition['type'])
-        text = additionType + ' +' + additionQty
+    buying_power = card["buyingPower"]
+    for action in actions:
+        action_type = action['type']
+        qty = action['qty']
+        required = action['required']
+        text = ((action_type + " ") if required else "You may " + action_type + " ") + qty + " card"
         height += create_text(text, draw, width, height, reg_font, font_color)
     if (buying_power):
         buying_power = str(buying_power)
