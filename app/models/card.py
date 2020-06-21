@@ -1,16 +1,10 @@
 from flask_restx import fields
-import uuid
 from . import action
-
-
-class GUID(fields.String):
-    def output(self, key, obj):
-        return uuid.uuid1()
 
 
 def CardModel(api):
     m = {
-        "id": GUID,
+        "qty": fields.Integer,
         "art": fields.String,
         "name": fields.String,
         "actions": fields.List(fields.Nested(action.model(api))),

@@ -15,8 +15,8 @@ def TurnModel(api):
 def SettingsModel(api):
     m = {
         "num_players": fields.Integer(min=1),
-        "starting_deck": fields.Nested(DeckModel(api)),
-        "starting_hand": fields.Nested(DeckModel(api)),
+        "starting_deck": DeckModel(api),
+        "starting_hand_size": fields.Integer,
         "turn": fields.Nested(TurnModel(api))
     }
     return api.model("settings", m)
@@ -24,19 +24,17 @@ def SettingsModel(api):
 
 def PlayerModel(api):
     m = {
-        "hand": fields.Nested(DeckModel(api)),
-        "discard": fields.Nested(DeckModel(api)),
-        "deck": fields.Nested(DeckModel(api)),
+        "hand": DeckModel(api),
+        "discard": DeckModel(api),
+        "deck": DeckModel(api),
         "current_turn": fields.Integer(min=0)
     }
     return api.model("player", m)
 
 
 def DeckModel(api):
-    m = {
-        "cards": fields.List(fields.Nested(card.model(api)))
-    }
-    return api.model("deck", m)
+    m = fields.List(fields.Nested(card.model(api)))
+    return m
 
 
 def GameModel(api):
@@ -45,9 +43,9 @@ def GameModel(api):
         "settings": fields.Nested(SettingsModel(api)),
         "curr_player": fields.Integer(min=0),
         "players": fields.List(fields.Nested(PlayerModel(api))),
-        "marketplace": fields.List(fields.Nested(DeckModel(api))),
-        "discard": fields.Nested(DeckModel(api)),
-        "destroy": fields.Nested(DeckModel(api))
+        "marketplace": fields.List((DeckModel(api))),
+        "discard": DeckModel(api),
+        "destroy": DeckModel(api)
     }
     return m
 

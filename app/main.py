@@ -128,7 +128,7 @@ class Game(Resource):
             'settings': {
                 'num_players': 0,
                 'starting_deck': [],
-                'starting_hand': [],
+                'starting_hand_size': 0,
                 'turn': {
                     'pre': [],
                     'during': [],
@@ -153,6 +153,37 @@ class Game(Resource):
         if (game is not None):
             game['_id'] = str(game['_id'])
             return jsonify(game)
+        # TODO: Return 404
+        return "Not OK"
+
+    def patch(self, game_id):
+        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+        if (game is not None):
+            game['_id'] = str(game['_id'])
+            settings = {
+                'num_players': int(api.payload['numPlayers']),
+                'starting_deck': api.payload['startingDeck'],
+                'starting_hand_size': int(api.payload['handSize']),
+                'turn': {
+                    'pre': [],
+                    'during': [{'type': 'action', 'qty': 1, 'required': False},
+                               {'type': 'buy', 'qty': 1, 'required': False}],
+                    'post': [{'type': 'discard', 'qty': -1, 'required': True},
+                             {'type': 'draw', 'qty': int(api.payload['handSize']), 'required': True}]
+                }
+            }
+            players = [{
+                'name': 'Player ' + str(i + 1),
+                'deck': api.payload['startingDeck'],
+                'hand': [],
+                'discard': [],
+                'current_turn': dict()
+            } for i in range(api.payload['numPlayers'])]
+            marketplace = api.payload['marketplace']
+            gamesCollection.update_one({'_id': ObjectId(game_id)},
+                                       {"$set": {"settings": settings, "players": players,
+                                                 "marketplace": marketplace}})
+            return "OK"
         # TODO: Return 404
         return "Not OK"
 
