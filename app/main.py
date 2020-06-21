@@ -15,7 +15,7 @@ import base64
 import os
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"*": {"origins": "*"}})
+cors = CORS(app)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 api = Api(app,
           version='0.1',
