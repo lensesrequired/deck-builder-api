@@ -5,7 +5,7 @@ from PIL import Image
 from flask_restx import Resource, Api
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_cors import CORS
-from .models import card
+from .models import card, game
 from .card_helpers import creation as card_creator
 from .card_helpers import art_files
 from .deck_helpers import creation as deck_creator
@@ -24,6 +24,7 @@ api = Api(app,
           )
 
 CardModel = card.model(api)
+GameModel = game.model(api)
 
 try:
     client = pymongo.MongoClient(
@@ -146,9 +147,9 @@ class Game(Resource):
 
 @api.route('/games/<path:game_id>')
 class Game(Resource):
-    @api.expect([CardModel])
-    def get(self, deck_id):
-        game = gamesCollection.find_one({'_id': ObjectId(deck_id)})
+    # @api.marshal_with(GameModel)
+    def get(self, game_id):
+        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
             game['_id'] = str(game['_id'])
             return jsonify(game)
