@@ -190,16 +190,9 @@ class Game(Resource):
                              {'type': 'draw', 'qty': int(api.payload['handSize']), 'required': True}]
                 }
             }
-            players = [{
-                'name': 'Player ' + str(i + 1),
-                'deck': api.payload['startingDeck'],
-                'hand': [],
-                'discard': [],
-                'current_turn': dict()
-            } for i in range(int(api.payload['numPlayers']))]
             marketplace = api.payload['marketplace']
             gamesCollection.update_one({'_id': ObjectId(game_id)},
-                                       {"$set": {"settings": settings, "players": players,
+                                       {"$set": {"settings": settings,
                                                  "marketplace": marketplace}})
             return "OK"
         # TODO: Return 404
@@ -208,10 +201,19 @@ class Game(Resource):
 
 @api.route('/games/<path:game_id>/start')
 class Game(Resource):
-    def setupPlayer(self, player, starting_hand_size):
-        player['deck'] = deck_utils.shuffle(player['deck'], len(player['deck']))
+    def setupPlayer(self, index, settings):
+        player = {
+            'name': 'Player ' + str(index + 1),
+            'discard': [],
+            'deck': [],
+            'hand': [],
+            'current_turn': dict()
+        }
+        player['deck'] = deck_utils.shuffle(
+            [card for card in settings['starting_deck'] for i in range(int(card['qty']))],
+            len(player['deck']))
         hand = []
-        for i in range(starting_hand_size):
+        for i in range(settings['starting_hand_size']):
             hand.append(player['deck'].pop())
         player['hand'] = hand
         return player
@@ -220,7 +222,7 @@ class Game(Resource):
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
             game['_id'] = str(game['_id'])
-            players = [self.setupPlayer(player, game['settings']['starting_hand_size']) for player in game['players']]
+            players = [self.setupPlayer(i, game['settings']) for i in range(game['settings']['num_players'])]
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {"curr_player": 0, 'players': players}})
             return jsonify(game)
