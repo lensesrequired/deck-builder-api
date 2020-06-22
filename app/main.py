@@ -207,7 +207,7 @@ class Game(Resource):
             'discard': [],
             'deck': [],
             'hand': [],
-            'current_turn': dict()
+            'current_turn': None
         }
         player['deck'] = deck_utils.shuffle(
             [card for card in settings['starting_deck'] for i in range(int(card['qty']))],
