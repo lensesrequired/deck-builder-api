@@ -1,5 +1,6 @@
 import io
 import traceback
+from datetime import datetime
 from flask import Flask, send_file, request, jsonify, after_this_request
 from PIL import Image
 from flask_restx import Resource, Api
@@ -73,15 +74,31 @@ class Deck(Resource):
         deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
         if (deck is not None):
             deck['_id'] = str(deck['_id'])
-            for card_data in deck.get('cards', []):
-                img, font_color = card_creator.get_art(card_data.get('art', '').split('/'))
-                img_io = io.BytesIO()
-
-                card_creator.create_card(card_data, img, font_color)
-
-                img.save(img_io, format='PNG')
-                card_data['image'] = base64.encodebytes(img_io.getvalue()).decode('ascii')
             return jsonify(deck)
+        # TODO: Return 404
+
+
+@api.route('/deck/images/<path:deck_id>')
+class DeckImages(Resource):
+    @api.doc(params={'card_id': 'specific card id (optional)'})
+    def get(self, deck_id):
+        deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
+        if (deck is not None):
+            images = []
+            card_id = request.args.get('card_id', '')
+            for card_data in deck.get('cards', []):
+                if (not card_id or card_id == card_data.get('id', '')):
+                    img, font_color = card_creator.get_art(card_data.get('art', '').split('/'))
+                    img_io = io.BytesIO()
+
+                    card_creator.create_card(card_data, img, font_color)
+
+                    img.save(img_io, format='PNG')
+                    images.append({'id': card_data.get('id', ''),
+                                   'data': base64.encodebytes(img_io.getvalue()).decode('ascii'),
+                                   'modified_at': datetime.strptime(card_data['modified_at'][:-5],
+                                                                    "%Y-%m-%dT%H:%M:%S")})
+            return jsonify(images)
         # TODO: Return 404
 
 
@@ -313,7 +330,6 @@ class Game(Resource):
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players']}})
             # Return adjusted player hand
-            print(game['players'][game['curr_player']])
             return "OK"
         # TODO: Return 404
         return "Not OK"
@@ -341,7 +357,6 @@ class Game(Resource):
             game['players'][game['curr_player']] = player
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players'], 'marketplace': marketplace}})
-            print(marketplace, game['players'][game['curr_player']])
             return "OK"
         # TODO: Return 404
         return "Not OK"
@@ -373,7 +388,6 @@ class Game(Resource):
             game['players'][game['curr_player']] = player
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players']}})
-            print(new_cards)
             # return new cards with images
             return "OK"
         # TODO: Return 404
@@ -395,7 +409,6 @@ class Game(Resource):
             game['players'][game['curr_player']] = player
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players']}})
-            print(game['players'])
             # return new hand
             return "OK"
         # TODO: Return 404
@@ -417,7 +430,6 @@ class Game(Resource):
             game['players'][game['curr_player']] = player
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players'], 'destroy': game['destroy']}})
-            print(game['players'])
             return "OK"
         # TODO: Return 404
         return "Not OK"
