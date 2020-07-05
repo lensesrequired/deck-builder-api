@@ -155,7 +155,6 @@ class Game(Resource):
             'curr_player': -1,
             'players': [],
             'marketplace': [],
-            'discard': [],
             'destroy': []
         }
         game_id = gamesCollection.insert_one(new_game).inserted_id
@@ -201,10 +200,8 @@ class Game(Resource):
                 'starting_hand_size': int(api.payload['handSize']),
                 'turn': {
                     'pre': [],
-                    'during': [{'type': 'action', 'qty': 1, 'required': False},
-                               {'type': 'buy', 'qty': 1, 'required': False}],
-                    'post': [{'type': 'discard', 'qty': -1, 'required': True},
-                             {'type': 'draw', 'qty': int(api.payload['handSize']), 'required': True}]
+                    'during': [{'action': {'optional': 1}, 'buy': {'optional': 2}}],
+                    'post': [{'discard': {'required': -1}, 'draw': {'required': int(api.payload['handSize'])}}]
                 }
             }
             marketplace = api.payload['marketplace']
@@ -249,7 +246,7 @@ class Game(Resource):
 
 
 @api.route('/games/<path:game_id>/player/start')
-class Game(Resource):
+class GamePlayer(Resource):
     def start_turn(self, player, settings):
         player['current_turn'] = settings['turn']['during']
         player['current_turn'].append({'type': 'buying_power', 'qty': 0})
@@ -271,7 +268,7 @@ class Game(Resource):
 
 
 @api.route('/games/<path:game_id>/player/end')
-class Game(Resource):
+class GamePlayer(Resource):
     def end_turn(self, player):
         player['current_turn'] = None
         player['discard'] += player['hand']
@@ -303,7 +300,7 @@ class Game(Resource):
 
 
 @api.route('/games/<path:game_id>/player/card/play')
-class Game(Resource):
+class GamePlayerCard(Resource):
     def play_card(self, player, index):
         actions = player['hand'][index]['actions']
         for action in actions:
@@ -336,10 +333,10 @@ class Game(Resource):
 
 
 @api.route('/games/<path:game_id>/player/card/buy')
-class Game(Resource):
+class GamePlayerCard(Resource):
     def buy_card(self, marketplace, player, index):
         c = marketplace[index]
-        marketplace[index] = card_utils.decrementQty(marketplace[index])
+        marketplace[index] = card_utils.decrement_qty(marketplace[index])
         player['discard'].append(c)
         card_utils.use_action(player['current_turn'], 'buy')
         for i in range(int(c['costBuy'])):
@@ -363,7 +360,7 @@ class Game(Resource):
 
 
 @api.route('/games/<path:game_id>/player/card/draw')
-class Game(Resource):
+class GamePlayerCard(Resource):
     def draw_cards(self, player, num_draw):
         new_cards = []
         deck = player['deck']
@@ -395,7 +392,7 @@ class Game(Resource):
 
 
 @api.route('/games/<path:game_id>/player/card/discard')
-class Game(Resource):
+class GamePlayerCard(Resource):
     @api.doc(params={'index': 'index of card to discard'})
     def post(self, game_id):
         # TODO: Check and do pre-turn actions
@@ -416,7 +413,7 @@ class Game(Resource):
 
 
 @api.route('/games/<path:game_id>/player/card/destroy')
-class Game(Resource):
+class GamePlayerCard(Resource):
     @api.doc(params={'index': 'index of card to discard'})
     def post(self, game_id):
         # TODO: Check and do pre-turn actions
