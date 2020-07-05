@@ -42,7 +42,7 @@ def create_card(card, background, font_color):
 
     title = card['name']
     para = textwrap.wrap(title, width=21)
-    pad = 0
+    pad = 5
     for line in para:
         w, h = title_font.getsize(line)
         draw.text(((width - w) / 2, (height / 20) + pad), line, font=title_font, fill=font_color)
@@ -62,7 +62,7 @@ def create_card(card, background, font_color):
         action_type = action['type']
         qty = action['qty']
         required = action['required']
-        text = ((action_type + " ") if required else "You may " + action_type + " ") + qty + " card"
+        text = ("required " if required else "optional ") + action_type + " " + qty
         height += create_text(text, draw, width, height, reg_font, font_color)
     if (buying_power):
         buying_power = str(buying_power)
