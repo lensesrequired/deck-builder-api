@@ -148,7 +148,7 @@ class Game(Resource):
                 'starting_hand_size': 0,
                 'turn': {
                     'pre': [],
-                    'during': [],
+                    'during': {},
                     'post': []
                 }
             },
@@ -183,7 +183,7 @@ class Game(Resource):
                 'starting_hand_size': int(api.payload['handSize']),
                 'turn': {
                     'pre': [],
-                    'during': [{'action': {'optional': 1}, 'buy': {'optional': 2}}],
+                    'during': {'action': {'optional': 1}, 'buy': {'optional': 1}},
                     'post': [{'discard': {'required': -1}, 'draw': {'required': int(api.payload['handSize'])}}]
                 }
             }
@@ -233,7 +233,7 @@ class Game(Resource):
 class GamePlayer(Resource):
     def start_turn(self, player, settings):
         player['current_turn'] = settings['turn']['during']
-        player['current_turn'].append({'type': 'buying_power', 'qty': 0})
+        player['current_turn']['buying_power'] = {'optional': 0}
         return player
 
     def post(self, game_id):
@@ -264,6 +264,7 @@ class GamePlayer(Resource):
                 player['discard'] = []
             if (len(deck) > 0):
                 new_cards.append(deck.pop())
+        player['deck'] = deck
         player['hand'] = new_cards
         return player
 
@@ -293,6 +294,7 @@ class GamePlayerCard(Resource):
             game['_id'] = str(game['_id'])
             action = card_utils.action_functions.get(action_type, lambda g, a: g)
             updated_game = action(game, request.args)
+            del updated_game['_id']
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": updated_game})
             return "OK"

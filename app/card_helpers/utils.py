@@ -39,17 +39,15 @@ def decrement_qty(card):
 
 def play_card(game, args):
     player = game['players'][game['curr_player']]
-    index = args.get('index')
+    index = int(args.get('index'))
     actions = player['hand'][index]['actions']
     for action in actions:
         add_action(player['current_turn'], action)
     if len(actions):
         use_action(player['current_turn'], 'action')
-    player['current_turn'] = [
-        action if action['type'] != 'buying_power' else
-        {'type': 'buying_power', 'qty': action['qty'] + int(player['hand'][index].get('buyingPower', 0))}
-        for action in player['current_turn']
-    ]
+    player['current_turn']['buying_power'] = {
+        'optional': player['current_turn']['buying_power'].get('optional', 0) + int(
+            player['hand'][index].get('buyingPower', 0))}
     player['hand'][index]['played'] = True
     game['players'][game['curr_player']] = player
     return game
@@ -58,7 +56,7 @@ def play_card(game, args):
 def buy_card(game, args):
     marketplace = game['marketplace']
     player = game['players'][game['curr_player']]
-    index = args.get('index')
+    index = int(args.get('index'))
     c = marketplace[index]
     marketplace[index] = decrement_qty(marketplace[index])
     player['discard'].append(c)
@@ -72,7 +70,7 @@ def buy_card(game, args):
 
 def draw_cards(game, args):
     player = game['players'][game['curr_player']]
-    num_draw = args.get('num')
+    num_draw = int(args.get('num'))
     new_cards = []
     deck = player['deck']
     for i in range(num_draw):
