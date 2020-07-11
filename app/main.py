@@ -299,134 +299,18 @@ class GamePlayer(Resource):
         return "Not OK"
 
 
-@api.route('/games/<path:game_id>/player/card/play')
+@api.route('/games/<path:game_id>/player/card/<path:action_type>')
 class GamePlayerCard(Resource):
-    def play_card(self, player, index):
-        actions = player['hand'][index]['actions']
-        for action in actions:
-            card_utils.add_action(player['current_turn'], action)
-        if len(actions):
-            card_utils.use_action(player['current_turn'], 'action')
-        player['current_turn'] = [
-            action if action['type'] != 'buying_power' else
-            {'type': 'buying_power', 'qty': action['qty'] + int(player['hand'][index].get('buyingPower', 0))}
-            for action in player['current_turn']
-        ]
-        player['hand'][index]['played'] = True
-        return player
-
-    @api.doc(params={'index': 'index of card from hand'})
-    def post(self, game_id):
-        # TODO: Verify playing card is allowed
+    @api.doc(params={'index': 'index of card for action', 'num': 'number of cards to act on'})
+    def post(self, game_id, action_type):
+        # TODO: Verify action is allowed
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
             game['_id'] = str(game['_id'])
-            index = request.args.get('index')
-            new_player = self.play_card(game['players'][game['curr_player']], int(index))
-            game['players'][game['curr_player']] = new_player
+            action = card_utils.action_functions.get(action_type, lambda at, g, a: game)
+            updated_game = action(action_type, game, request.args)
             gamesCollection.update_one({'_id': ObjectId(game_id)},
-                                       {"$set": {'players': game['players']}})
-            # Return adjusted player hand
-            return "OK"
-        # TODO: Return 404
-        return "Not OK"
-
-
-@api.route('/games/<path:game_id>/player/card/buy')
-class GamePlayerCard(Resource):
-    def buy_card(self, marketplace, player, index):
-        c = marketplace[index]
-        marketplace[index] = card_utils.decrement_qty(marketplace[index])
-        player['discard'].append(c)
-        card_utils.use_action(player['current_turn'], 'buy')
-        for i in range(int(c['costBuy'])):
-            card_utils.use_action(player['current_turn'], 'buying_power')
-        return marketplace, player
-
-    @api.doc(params={'index': 'index of card from marketplace'})
-    def post(self, game_id):
-        # TODO: Verify buying card is allowed
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
-        if (game is not None):
-            game['_id'] = str(game['_id'])
-            index = request.args.get('index')
-            marketplace, player = self.buy_card(game['marketplace'], game['players'][game['curr_player']], int(index))
-            game['players'][game['curr_player']] = player
-            gamesCollection.update_one({'_id': ObjectId(game_id)},
-                                       {"$set": {'players': game['players'], 'marketplace': marketplace}})
-            return "OK"
-        # TODO: Return 404
-        return "Not OK"
-
-
-@api.route('/games/<path:game_id>/player/card/draw')
-class GamePlayerCard(Resource):
-    def draw_cards(self, player, num_draw):
-        new_cards = []
-        deck = player['deck']
-        for i in range(num_draw):
-            card_utils.use_action(player['current_turn'], 'draw')
-            if (len(deck) == 0):
-                deck = deck_utils.shuffle(player['discard'], len(player['discard']))
-                player['discard'] = []
-            if (len(deck) > 0):
-                new_cards.append(deck.pop())
-        player['hand'] += new_cards
-        return player, new_cards
-
-    @api.doc(params={'num_draw': 'number of cards to draw'})
-    def post(self, game_id):
-        # TODO: Check and do pre-turn actions
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
-        if (game is not None):
-            game['_id'] = str(game['_id'])
-            num_draw = request.args.get('num_draw')
-            player, new_cards = self.draw_cards(game['players'][game['curr_player']], int(num_draw))
-            game['players'][game['curr_player']] = player
-            gamesCollection.update_one({'_id': ObjectId(game_id)},
-                                       {"$set": {'players': game['players']}})
-            # return new cards with images
-            return "OK"
-        # TODO: Return 404
-        return "Not OK"
-
-
-@api.route('/games/<path:game_id>/player/card/discard')
-class GamePlayerCard(Resource):
-    @api.doc(params={'index': 'index of card to discard'})
-    def post(self, game_id):
-        # TODO: Check and do pre-turn actions
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
-        if (game is not None):
-            game['_id'] = str(game['_id'])
-            index = request.args.get('index')
-            player = game['players'][game['curr_player']]
-            card_utils.use_action(player['current_turn'], 'discard')
-            player['discard'].append(player['hand'].pop(int(index)))
-            game['players'][game['curr_player']] = player
-            gamesCollection.update_one({'_id': ObjectId(game_id)},
-                                       {"$set": {'players': game['players']}})
-            # return new hand
-            return "OK"
-        # TODO: Return 404
-        return "Not OK"
-
-
-@api.route('/games/<path:game_id>/player/card/destroy')
-class GamePlayerCard(Resource):
-    @api.doc(params={'index': 'index of card to discard'})
-    def post(self, game_id):
-        # TODO: Check and do pre-turn actions
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
-        if (game is not None):
-            game['_id'] = str(game['_id'])
-            index = request.args.get('index')
-            player = game['players'][game['curr_player']]
-            card_utils.use_action(player['current_turn'], 'destroy')
-            game['destroy'].append(player['hand'].pop(int(index)))
-            game['players'][game['curr_player']] = player
-            gamesCollection.update_one({'_id': ObjectId(game_id)},
-                                       {"$set": {'players': game['players'], 'destroy': game['destroy']}})
+                                       {"$set": updated_game})
             return "OK"
         # TODO: Return 404
         return "Not OK"
