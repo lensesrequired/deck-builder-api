@@ -107,5 +107,6 @@ action_functions = {
     'play': play_card,
     'buy': buy_card,
     'draw': draw_cards,
-    'discard': discard_card
+    'discard': discard_card,
+    'destroy': destroy_card
 }
