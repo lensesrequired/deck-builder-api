@@ -43,6 +43,7 @@ class Photo(Resource):
     @api.doc(params={'name': 'photo name'})
     def get(self, photo_type):
         photo_name = request.args.get('name')
+
         if (photo_name is not None):
             img_io = io.BytesIO()
             try:
@@ -54,7 +55,6 @@ class Photo(Resource):
                 print('error', error)
                 traceback.print_tb(error.__traceback__)
             return send_file(img_io, mimetype='image/png')
-        # TODO: Return all file names of type (this is for ui photo selector)
         return jsonify(art_files.card_types.get(photo_type, []))
 
 
@@ -223,6 +223,7 @@ class Game(Resource):
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {"curr_player": 0, 'players': players}})
             game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+            game['_id'] = str(game['_id'])
             return jsonify(game)
         # TODO: Return 404
         return "Not OK"
@@ -290,8 +291,8 @@ class GamePlayerCard(Resource):
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
             game['_id'] = str(game['_id'])
-            action = card_utils.action_functions.get(action_type, lambda at, g, a: game)
-            updated_game = action(action_type, game, request.args)
+            action = card_utils.action_functions.get(action_type, lambda g, a: g)
+            updated_game = action(game, request.args)
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": updated_game})
             return "OK"
