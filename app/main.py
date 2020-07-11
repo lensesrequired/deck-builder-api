@@ -168,23 +168,6 @@ class Game(Resource):
         game = gamesCollection.find_one({'_id': ObjectId(game_id)})
         if (game is not None):
             game['_id'] = str(game['_id'])
-            for card_data in game.get('marketplace', []):
-                img, font_color = card_creator.get_art(card_data.get('art', '').split('/'))
-                img_io = io.BytesIO()
-
-                card_creator.create_card(card_data, img, font_color)
-
-                img.save(img_io, format='PNG')
-                card_data['image'] = base64.encodebytes(img_io.getvalue()).decode('ascii')
-            if (game.get('curr_player', -1) > -1):
-                for card_data in game.get('players', [])[game['curr_player']].get('hand', []):
-                    img, font_color = card_creator.get_art(card_data.get('art', '').split('/'))
-                    img_io = io.BytesIO()
-
-                    card_creator.create_card(card_data, img, font_color)
-
-                    img.save(img_io, format='PNG')
-                    card_data['image'] = base64.encodebytes(img_io.getvalue()).decode('ascii')
             return jsonify(game)
         # TODO: Return 404
         return "Not OK"
