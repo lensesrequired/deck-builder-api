@@ -2,6 +2,12 @@ from random import randint
 
 
 def shuffle(cards, n):
+    """
+    Shuffle an array of cards
+    :param cards: array of cards
+    :param n: number of cards
+    :return: shuffled array of cards
+    """
     for i in range(n - 1, 0, -1):
         # Pick a random index from 0 to i
         j = randint(0, i + 1)
