@@ -91,7 +91,8 @@ def play_card(game, args):
         use_action(player['current_turn'], 'action')
 
     # add the buying power from the card to the players turn
-    add_action(player['current_turn'], {'buying_power': {'optional': played_card.get('buyingPower', 0)}})
+    add_action(player['current_turn'],
+               {'type': 'buying_power', 'required': False, 'qty': played_card.get('buyingPower', 0)})
 
     # set the card in the hand as played and update the player in the game
     player['hand'][index]['played'] = True
