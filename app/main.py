@@ -361,8 +361,10 @@ class GamePlayer(Resource):
         """
         player['current_turn'] = None
 
-        # move players hand into discard
-        player['discard'] += player['hand']
+        # move players hand into discard (and reset them)
+        for card in player['hand']:
+            card['played'] = False
+            player['discard'].append(card)
 
         # draw new cards (hard coded as 5 new cards currently)
         new_cards = []

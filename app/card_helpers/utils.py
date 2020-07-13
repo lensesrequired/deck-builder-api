@@ -176,8 +176,10 @@ def discard_card(game, args):
     # use a discard action
     use_action(player['current_turn'], 'discard')
 
-    # take the card at the specified index from the player's hand and put it into the discard
-    player['discard'].append(player['hand'].pop(int(index)))
+    # take the card at the specified index from the player's hand and put it into the discard (after resetting it)
+    card = player['hand'].pop(int(index))
+    card['played'] = False
+    player['discard'].append(card)
 
     # update the player
     game['players'][game['curr_player']] = player
