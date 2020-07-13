@@ -198,14 +198,17 @@ class Game(Resource):
                 'starting_hand_size': 0,
                 'turn': {
                     'pre': [],
-                    'during': {},
+                    'during': dict(),
                     'post': []
                 }
             },
+            'end_trigger': dict(),
+            'num_turns': 0,
             'curr_player': -1,
             'players': [],
             'marketplace': [],
-            'destroy': []
+            'destroy': [],
+            'game_ended': False
         }
         game_id = gamesCollection.insert_one(new_game).inserted_id
         return str(game_id)
@@ -246,6 +249,9 @@ class Game(Resource):
                     'pre': [],
                     'during': {'action': {'optional': 1}, 'buy': {'optional': 1}},
                     'post': [{'discard': {'required': -1}, 'draw': {'required': int(api.payload['handSize'])}}]
+                },
+                'end_trigger': {
+                    'turns': 10
                 }
             }
             marketplace = api.payload['marketplace']
@@ -383,6 +389,9 @@ class GamePlayer(Resource):
         player['hand'] = new_cards
         return player
 
+    def check_end_triggers(self, num_turns):
+        return int(num_turns) == 10
+
     def post(self, game_id):
         """
         Update current player's turn into ended state and set the next player as current
@@ -398,9 +407,17 @@ class GamePlayer(Resource):
             # increase the current player index by one and if it's greater than the number of players,
             # use mod to start it back over at 0
             curr_player = (game['curr_player'] + 1) % int(game['settings']['num_players'])
+
+            # set number of turns played
+            num_turns = game.get('num_turns', 0)
+            if (curr_player == 0):
+                num_turns += 1
+            end = self.check_end_triggers(num_turns)
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players'],
-                                                 'curr_player': curr_player}})
+                                                 'curr_player': curr_player,
+                                                 'num_turns': num_turns,
+                                                 'game_ended': end}})
             return "OK"
         # TODO: Return 404
         return "Not OK"
