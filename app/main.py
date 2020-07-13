@@ -9,6 +9,7 @@ from .models import card, game
 from .card_helpers import creation as card_creator, utils as card_utils
 from .card_helpers import art_files
 from .deck_helpers import creation as deck_creator, utils as deck_utils
+from .game_helpers import utils as game_utils
 import pymongo
 from bson.objectid import ObjectId
 import base64
@@ -412,7 +413,12 @@ class GamePlayer(Resource):
             num_turns = game.get('num_turns', 0)
             if (curr_player == 0):
                 num_turns += 1
+
+            # check if it's the end of the game and if it is, calculate the stats
             end = self.check_end_triggers(num_turns)
+            if (end):
+                end = game_utils.calculate_stats(game)
+
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players'],
                                                  'curr_player': curr_player,
