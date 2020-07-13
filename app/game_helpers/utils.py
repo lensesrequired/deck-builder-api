@@ -11,10 +11,15 @@ def calculate_stats(game):
         'player_points': dict(),
         'winner': ('', -1)
     }
+
     for player in game['players']:
         all_cards = player['hand'] + player['discard'] + player['deck']
-        points = sum([card['victoryPoints'] for card in all_cards])
+
+        # add up the victory points of all the cards in the player's possession
+        points = sum([int(card['victoryPoints']) for card in all_cards])
         stats['player_points'][player['name']] = points
+
+        # if they have more points than the current winner, set them as the new winner
         if (points > stats['winner'][1]):
             stats['winner'] = (player['name'], points)
     return stats
