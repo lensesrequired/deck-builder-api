@@ -1,6 +1,3 @@
-from random import randint
-
-
 def calculate_stats(game):
     """
     Calculate and return the total points for each player and the winner of the game

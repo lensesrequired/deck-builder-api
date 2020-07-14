@@ -2,8 +2,9 @@ import io
 import traceback
 from datetime import datetime
 from flask import Flask, send_file, request, jsonify, after_this_request
-from flask_restx import Resource, Api
+from flask_restx import Resource, Api, abort
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.exceptions import BadRequest
 from flask_cors import CORS
 from .models import card, game
 from .card_helpers import creation as card_creator, utils as card_utils
@@ -12,6 +13,7 @@ from .deck_helpers import creation as deck_creator, utils as deck_utils
 from .game_helpers import utils as game_utils
 import pymongo
 from bson.objectid import ObjectId
+from bson.errors import InvalidId
 import base64
 import os
 
@@ -36,6 +38,20 @@ try:
 except Exception as error:
     print('error', error)
     traceback.print_tb(error.__traceback__)
+
+
+def lookupDeck(id):
+    try:
+        return decksCollection.find_one({'_id': ObjectId(id)})
+    except InvalidId as e:
+        raise BadRequest(str(e))
+
+
+def lookupGame(id):
+    try:
+        return gamesCollection.find_one({'_id': ObjectId(id)})
+    except InvalidId as e:
+        raise BadRequest(str(e))
 
 
 @api.route('/photo/<path:photo_type>')
@@ -74,12 +90,12 @@ class Deck(Resource):
         :return: Deck object (contains array Cards)
         """
         # look up deck and return 404 if it doesn't exist
-        deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
+        deck = lookupDeck(deck_id)
         if (deck is not None):
             # id needs to be casted to string since object id isn't json-ready
             deck['_id'] = str(deck['_id'])
             return jsonify(deck)
-        # TODO: Return 404
+        raise abort(404, "Deck could not be found")
 
 
 @api.route('/deck/images/<path:deck_id>')
@@ -94,7 +110,7 @@ class DeckImages(Resource):
         :return: list of image objects (objects contain image itself, card id, and the last time it was modified)
         """
         # look up deck and return 404 if it doesn't exist
-        deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
+        deck = lookupDeck(deck_id)
         if (deck is not None):
             images = []
 
@@ -119,7 +135,7 @@ class DeckImages(Resource):
                                    'modified_at': datetime.strptime(card_data['modified_at'][:-5],
                                                                     "%Y-%m-%dT%H:%M:%S")})
             return jsonify(images)
-        # TODO: Return 404
+        raise abort(404, "Deck could not be found")
 
 
 @api.route('/deck/<path:deck_id>/pdf/<path:download_id>')
@@ -132,7 +148,7 @@ class Deck(Resource):
         :return: pdf file
         """
         # look up deck and return 404 if it doesn't exist
-        deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
+        deck = lookupDeck(deck_id)
         if (deck is not None):
             # specify an action to take after ever request
             @after_this_request
@@ -161,7 +177,7 @@ class Deck(Resource):
                                   append_images=pdf_pages[1:])
 
             return send_file("../pdfs/deck_" + deck_id + "_" + download_id + ".pdf", mimetype='application/pdf')
-        # TODO: Return 404
+        raise abort(404, "Deck could not be found")
 
 
 @api.route('/cards/<path:deck_id>')
@@ -174,7 +190,7 @@ class Card(Resource):
         :return: OK or error
         """
         # look up deck or create it if it doesn't exist
-        deck = decksCollection.find_one({'_id': ObjectId(deck_id)})
+        deck = lookupDeck(deck_id)
         if (deck is not None):
             decksCollection.update_one({'_id': deck['_id']}, {"$set": {"cards": api.payload}})
             return "OK"
@@ -224,13 +240,12 @@ class Game(Resource):
         :return: Game object
         """
         # look up game and return 404 if it doesn't exist
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+        game = lookupGame(game_id)
         if (game is not None):
             # id needs to be casted to string since object id isn't json-ready
             game['_id'] = str(game['_id'])
             return jsonify(game)
-        # TODO: Return 404
-        return "Not OK"
+        raise abort(404, "Game could not be found")
 
     @api.expect(GameModel)
     def patch(self, game_id):
@@ -240,7 +255,7 @@ class Game(Resource):
         :return: OK or error
         """
         # look up game and return 404 if it doesn't exist
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+        game = lookupGame(game_id)
         if (game is not None):
             settings = {
                 'num_players': int(api.payload['numPlayers']),
@@ -262,8 +277,7 @@ class Game(Resource):
                                        {"$set": {"settings": settings,
                                                  "marketplace": marketplace}})
             return "OK"
-        # TODO: Return 404
-        return "Not OK"
+        raise abort(404, "Game could not be found")
 
 
 @api.route('/games/<path:game_id>/start')
@@ -305,7 +319,7 @@ class Game(Resource):
         :return: game object
         """
         # look up game and return 404 if it doesn't exist
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+        game = lookupGame(game_id)
         if (game is not None):
             # initialize a list of players of the user specified size
             players = [self.setup_player(i, game['settings']) for i in range(game['settings']['num_players'])]
@@ -319,8 +333,7 @@ class Game(Resource):
             # id needs to be casted to string since object id isn't json-ready
             game['_id'] = str(game['_id'])
             return jsonify(game)
-        # TODO: Return 404
-        return "Not OK"
+        raise abort(404, "Game could not be found")
 
 
 @api.route('/games/<path:game_id>/player/start')
@@ -346,7 +359,7 @@ class GamePlayer(Resource):
         """
         # TODO: Check and do pre-turn actions
         # look up game and return 404 if it doesn't exist
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+        game = lookupGame(game_id)
         if (game is not None):
             # update the player at the current player index with a turn that is started
             game['players'][game['curr_player']] = self.start_turn(game['players'][game['curr_player']],
@@ -354,8 +367,7 @@ class GamePlayer(Resource):
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players']}})
             return "OK"
-        # TODO: Return 404
-        return "Not OK"
+        raise abort(404, "Game could not be found")
 
 
 @api.route('/games/<path:game_id>/player/end')
@@ -401,7 +413,7 @@ class GamePlayer(Resource):
         """
         # TODO: Check and do post-turn actions
         # look up game and return 404 if it doesn't exist
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+        game = lookupGame(game_id)
         if (game is not None):
             # update the player at the current player index with a turn that is ended
             game['players'][game['curr_player']] = self.end_turn(game['players'][game['curr_player']])
@@ -425,8 +437,7 @@ class GamePlayer(Resource):
                                                  'num_turns': num_turns,
                                                  'game_ended': end}})
             return "OK"
-        # TODO: Return 404
-        return "Not OK"
+        raise abort(404, "Game could not be found")
 
 
 @api.route('/games/<path:game_id>/player/card/<path:action_type>')
@@ -441,7 +452,7 @@ class GamePlayerCard(Resource):
         """
         # TODO: Verify action is allowed
         # look up game and return 404 if it doesn't exist
-        game = gamesCollection.find_one({'_id': ObjectId(game_id)})
+        game = lookupGame(game_id)
         if (game is not None):
             # look up action in action functions from utils and do that function on the game
             # if the action requested doesn't exist, just return the game as is
@@ -453,8 +464,7 @@ class GamePlayerCard(Resource):
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": updated_game})
             return "OK"
-        # TODO: Return 404
-        return "Not OK"
+        raise abort(404, "Game could not be found")
 
 
 if __name__ == '__main__':
