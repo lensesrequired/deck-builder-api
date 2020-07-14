@@ -405,6 +405,9 @@ class GamePlayer(Resource):
     def check_end_triggers(self, num_turns):
         return int(num_turns) == 10
 
+    def check_turn_actions(self, curr_turn):
+        return sum([int(curr_turn[action_type].get('required', 0)) for action_type in list(curr_turn)])
+
     def post(self, game_id):
         """
         Update current player's turn into ended state and set the next player as current
@@ -415,8 +418,15 @@ class GamePlayer(Resource):
         # look up game and return 404 if it doesn't exist
         game = lookupGame(game_id)
         if (game is not None):
-            # update the player at the current player index with a turn that is ended
-            game['players'][game['curr_player']] = self.end_turn(game['players'][game['curr_player']])
+            # get player at curr_player index
+            player = game['players'][game['curr_player']]
+
+            # check if the player is allowed to end their turn or if they have actions they must still take
+            if (self.check_turn_actions(player['current_turn']) > 0):
+                raise BadRequest("There are still required actions")
+
+            # update the player with a turn that is ended
+            game['players'][game['curr_player']] = self.end_turn(player)
             # increase the current player index by one and if it's greater than the number of players,
             # use mod to start it back over at 0
             curr_player = (game['curr_player'] + 1) % int(game['settings']['num_players'])
@@ -457,7 +467,10 @@ class GamePlayerCard(Resource):
             # look up action in action functions from utils and do that function on the game
             # if the action requested doesn't exist, just return the game as is
             action = card_utils.action_functions.get(action_type, lambda g, a: g)
-            updated_game = action(game, request.args)
+            try:
+                updated_game = action(game, request.args)
+            except Exception as e:
+                raise BadRequest(str(e))
 
             # don't send id in the updated game
             del updated_game['_id']

@@ -18,8 +18,8 @@ def use_action(turn, action_type):
             turn[action_type]['optional'] -= 1
             return
 
-    # if there wasn't any available of this action, set the optional qty of this action to -1
-    turn[action_type] = {'optional': -1}
+    # if there wasn't any available of this action, tell the user it wasn't allowed
+    raise Exception("Action not allowed")
 
 
 def add_action(turn, action):
