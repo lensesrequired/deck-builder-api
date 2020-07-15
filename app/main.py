@@ -405,7 +405,24 @@ class GamePlayer(Resource):
     def check_end_triggers(self, num_turns):
         return int(num_turns) == 10
 
-    def check_turn_actions(self, curr_turn):
+    def check_turn_actions(self, player):
+        curr_turn = player['current_turn']
+
+        # if there's no cards to draw don't check for required draws
+        if (len(player['deck'] + player['discard']) == 0):
+            if (curr_turn.get('draw')):
+                del curr_turn['draw']
+
+        # if there's no cards to play don't worry about required plays, discards, or destroys
+        playable_cards = [card for card in player['hand'] if (not card['played'])]
+        if (len(playable_cards) == 0):
+            if (curr_turn.get('discard')):
+                del curr_turn['discard']
+            if (curr_turn.get('destroy')):
+                del curr_turn['destroy']
+            if (curr_turn.get('play')):
+                del curr_turn['play']
+
         return sum([int(curr_turn[action_type].get('required', 0)) for action_type in list(curr_turn)])
 
     def post(self, game_id):
@@ -422,7 +439,7 @@ class GamePlayer(Resource):
             player = game['players'][game['curr_player']]
 
             # check if the player is allowed to end their turn or if they have actions they must still take
-            if (self.check_turn_actions(player['current_turn']) > 0):
+            if (self.check_turn_actions(player) > 0):
                 raise BadRequest("There are still required actions")
 
             # update the player with a turn that is ended
