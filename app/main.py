@@ -414,7 +414,7 @@ class GamePlayer(Resource):
                 del curr_turn['draw']
 
         # if there's no cards to play don't worry about required plays, discards, or destroys
-        playable_cards = [card for card in player['hand'] if (not card['played'])]
+        playable_cards = [card for card in player['hand'] if (not card.get('played', False))]
         if (len(playable_cards) == 0):
             if (curr_turn.get('discard')):
                 del curr_turn['discard']
