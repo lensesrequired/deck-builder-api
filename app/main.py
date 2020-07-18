@@ -261,14 +261,12 @@ class Game(Resource):
                 'num_players': int(api.payload['numPlayers']),
                 'starting_deck': api.payload['startingDeck'],
                 'starting_hand_size': int(api.payload['handSize']),
-                'turn': {  # these are hard coded for now, eventually should be set by user
-                    'pre': [],
-                    'during': {'action': {'optional': 1}, 'buy': {'optional': 1}},
-                    'post': [{'discard': {'required': -1}, 'draw': {'required': int(api.payload['handSize'])}}]
+                'turn': {
+                    'pre': api.payload.get('turn', dict()).get('pre', dict()),
+                    'during': api.payload.get('turn', dict()).get('during', dict()),
+                    'post': api.payload.get('turn', dict()).get('post', dict())
                 },
-                'end_trigger': {
-                    'turns': 10
-                }
+                'end_trigger': api.payload.get('end_trigger', {'turns': 10})
             }
             marketplace = api.payload['marketplace']
 
