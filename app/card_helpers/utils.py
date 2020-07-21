@@ -9,13 +9,18 @@ def use_action(turn, action_type):
     :return: None
     """
     if (turn.get(action_type)):
+        required_qty = turn[action_type].get('required', 0)
+        optional_qty = turn[action_type].get('optional', 0)
         # look for required qty and decrement that first
-        if (turn[action_type].get('required', 0) > 0):
+        if (required_qty > 0):
             turn[action_type]['required'] -= 1
             return
         # if no required qty, check and decrement optional
-        if (turn[action_type].get('optional')):
+        if (optional_qty > 0):
             turn[action_type]['optional'] -= 1
+            return
+        # if there's infinitie allowed, just return to allow it
+        if (required_qty == -1 or optional_qty == -1):
             return
 
     # if there wasn't any available of this action, tell the user it wasn't allowed
