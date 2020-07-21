@@ -11,6 +11,7 @@ def use_action(turn, action_type):
     if (turn.get(action_type)):
         required_qty = turn[action_type].get('required', 0)
         optional_qty = turn[action_type].get('optional', 0)
+
         # look for required qty and decrement that first
         if (required_qty > 0):
             turn[action_type]['required'] -= 1
