@@ -280,36 +280,6 @@ class Game(Resource):
 
 @api.route('/games/<path:game_id>/start')
 class Game(Resource):
-    def setup_player(self, index, settings):
-        """
-        Creates a player based on the user specified settings
-        :param index: int
-        :param settings: settings hash
-        :return: player hash
-        """
-        # default player
-        player = {
-            'name': 'Player ' + str(index + 1),
-            'discard': [],
-            'deck': [],
-            'hand': [],
-            'current_turn': None
-        }
-
-        # for each card in the starting deck,
-        # add individuals of that card for the correct quantity as specified in the settings
-        # then shuffle it and set it as the players deck
-        starting_deck = [card for card in settings['starting_deck'] for i in range(int(card['qty']))]
-        player['deck'] = deck_utils.shuffle(starting_deck, len(player['deck']))
-
-        # grab the user specified starting hand size off the deck and set that as the player's hand
-        hand = []
-        for i in range(settings['starting_hand_size']):
-            hand.append(player['deck'].pop())
-        player['hand'] = hand
-
-        return player
-
     def post(self, game_id):
         """
         Start a game by setting the players based on the settings and the current player to the first player
@@ -320,7 +290,7 @@ class Game(Resource):
         game = lookupGame(game_id)
         if (game is not None):
             # initialize a list of players of the user specified size
-            players = [self.setup_player(i, game['settings']) for i in range(game['settings']['num_players'])]
+            players = [game_utils.setup_player(i, game['settings']) for i in range(game['settings']['num_players'])]
 
             # set the index of the current player to be the first one and set the players to the initialized list
             game["curr_player"] = 0
@@ -336,19 +306,6 @@ class Game(Resource):
 
 @api.route('/games/<path:game_id>/player/start')
 class GamePlayer(Resource):
-    def start_turn(self, player, settings):
-        """
-        Update a player into the started turn state by setting it's current_turn
-        :param player: player who's turn should be started
-        :param settings: player specified settings
-        :return: player
-        """
-        # set player's current turn with the actions from the user specified turn
-        player['current_turn'] = settings['turn']['during']
-        # set the initial buying power for a turn to 0
-        player['current_turn']['buying_power'] = {'optional': 0}
-        return player
-
     def post(self, game_id):
         """
         Update current player's turn into started state
@@ -360,8 +317,8 @@ class GamePlayer(Resource):
         game = lookupGame(game_id)
         if (game is not None):
             # update the player at the current player index with a turn that is started
-            game['players'][game['curr_player']] = self.start_turn(game['players'][game['curr_player']],
-                                                                   game['settings'])
+            game['players'][game['curr_player']] = game_utils.start_turn(game['players'][game['curr_player']],
+                                                                         game['settings'])
             gamesCollection.update_one({'_id': ObjectId(game_id)},
                                        {"$set": {'players': game['players']}})
             return "OK"
@@ -370,63 +327,6 @@ class GamePlayer(Resource):
 
 @api.route('/games/<path:game_id>/player/end')
 class GamePlayer(Resource):
-    def end_turn(self, player):
-        """
-        Update a player into the ended turn state by setting it's current_turn and doing post turn actions
-        :param player: player who's turn should be ended
-        :return: player
-        """
-        player['current_turn'] = None
-
-        # move players hand into discard (and reset them)
-        for card in player['hand']:
-            card['played'] = False
-            player['discard'].append(card)
-
-        # draw new cards (hard coded as 5 new cards currently)
-        new_cards = []
-        deck = player['deck']
-        for i in range(5):
-            # if players deck runs out, shuffle discard and make that the players deck
-            if (len(deck) == 0):
-                deck = deck_utils.shuffle(player['discard'], len(player['discard']))
-                player['discard'] = []
-
-            # pop card off deck and put it into the new hand
-            if (len(deck) > 0):
-                new_cards.append(deck.pop())
-
-        player['deck'] = deck
-        player['hand'] = new_cards
-        return player
-
-    def check_end_triggers(self, num_turns):
-        return int(num_turns) == 10
-
-    def check_turn_actions(self, player):
-        curr_turn = player['current_turn']
-
-        # if there's no cards to draw don't check for required draws
-        if (len(player['deck'] + player['discard']) == 0):
-            if (curr_turn.get('draw')):
-                del curr_turn['draw']
-
-        # if there's no cards to play don't worry about required plays, discards, or destroys
-        playable_cards = [card for card in player['hand'] if (not card.get('played', False))]
-        if (len(playable_cards) == 0):
-            if (curr_turn.get('discard')):
-                del curr_turn['discard']
-            if (curr_turn.get('destroy')):
-                del curr_turn['destroy']
-            if (curr_turn.get('play')):
-                del curr_turn['play']
-
-        # sum up all the required actions left (and if there's infinite of one available, give it a positive value)
-        return sum(
-            [int(
-                curr_turn[action_type].get('required', 0) if curr_turn[action_type].get('required', 0) > -1 else 1
-            ) for action_type in list(curr_turn)])
-
     def post(self, game_id):
         """
         Update current player's turn into ended state and set the next player as current
@@ -441,11 +341,11 @@ class GamePlayer(Resource):
             player = game['players'][game['curr_player']]
 
             # check if the player is allowed to end their turn or if they have actions they must still take
-            if (self.check_turn_actions(player) > 0):
+            if (game_utils.check_turn_actions(player) > 0):
                 raise BadRequest("There are still required actions")
 
             # update the player with a turn that is ended
-            game['players'][game['curr_player']] = self.end_turn(player)
+            game['players'][game['curr_player']] = game_utils.end_turn(player)
             # increase the current player index by one and if it's greater than the number of players,
             # use mod to start it back over at 0
             curr_player = (game['curr_player'] + 1) % int(game['settings']['num_players'])
@@ -456,7 +356,7 @@ class GamePlayer(Resource):
                 num_turns += 1
 
             # check if it's the end of the game and if it is, calculate the stats
-            end = self.check_end_triggers(num_turns)
+            end = game_utils.check_end_triggers(game['settings']['end_trigger'], num_turns, game['marketplace'])
             if (end):
                 end = game_utils.calculate_stats(game)
 
