@@ -217,9 +217,9 @@ class Game(Resource):
                     'pre': [],
                     'during': dict(),
                     'post': []
-                }
+                },
+                'end_trigger': dict()
             },
-            'end_trigger': dict(),
             'num_turns': 0,
             'curr_player': -1,
             'players': [],
