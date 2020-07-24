@@ -9,7 +9,7 @@ from flask_cors import CORS
 from .models import card, game
 from .card_helpers import creation as card_creator, utils as card_utils
 from .card_helpers import art_files
-from .deck_helpers import creation as deck_creator, utils as deck_utils
+from .deck_helpers import creation as deck_creator
 from .game_helpers import utils as game_utils
 import pymongo
 from bson.objectid import ObjectId
@@ -345,7 +345,7 @@ class GamePlayer(Resource):
                 raise BadRequest("There are still required actions")
 
             # update the player with a turn that is ended
-            game['players'][game['curr_player']] = game_utils.end_turn(player)
+            game['players'][game['curr_player']] = game_utils.end_turn(player, game['settings'])
             # increase the current player index by one and if it's greater than the number of players,
             # use mod to start it back over at 0
             curr_player = (game['curr_player'] + 1) % int(game['settings']['num_players'])

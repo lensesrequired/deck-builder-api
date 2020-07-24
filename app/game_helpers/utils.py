@@ -39,6 +39,32 @@ def start_turn(player, settings):
     :param settings: player specified settings
     :return: player
     """
+    # check settings for draws and discards
+    actions = settings['turn']['pre']
+    discard = int(actions.get('discard', dict()).get('required', 0)) == -1
+    draw = int(actions.get('draw', dict()).get('required', 0))
+
+    # discard cards
+    if (discard):
+        for card in player['hand']:
+            card['played'] = False
+            player['discard'].append(card)
+
+    # draw new cards
+    new_cards = []
+    deck = player['deck']
+    for i in range(draw):
+        # if players deck runs out, shuffle discard and make that the players deck
+        if (len(deck) == 0):
+            deck = deck_utils.shuffle(player['discard'], len(player['discard']))
+            player['discard'] = []
+
+        # pop card off deck and put it into the new hand (as long as there's card to be had)
+        if (len(deck) > 0):
+            new_cards.append(deck.pop())
+    player['deck'] = deck
+    player['hand'] += new_cards
+
     # set player's current turn with the actions from the user specified turn
     player['current_turn'] = settings['turn']['during']
     # set the initial buying power for a turn to 0
@@ -46,7 +72,7 @@ def start_turn(player, settings):
     return player
 
 
-def end_turn(player):
+def end_turn(player, settings):
     """
     Update a player into the ended turn state by setting it's current_turn and doing post turn actions
     :param player: player who's turn should be ended
@@ -54,26 +80,32 @@ def end_turn(player):
     """
     player['current_turn'] = None
 
-    # move players hand into discard (and reset them)
-    for card in player['hand']:
-        card['played'] = False
-        player['discard'].append(card)
+    # check settings for draws and discards
+    actions = settings['turn']['post']
+    discard = int(actions.get('discard', dict()).get('required', 0)) == -1
+    draw = int(actions.get('draw', dict()).get('required', 0))
 
-    # draw new cards (hard coded as 5 new cards currently)
+    # discard cards
+    if (discard):
+        for card in player['hand']:
+            card['played'] = False
+            player['discard'].append(card)
+
+    # draw new cards
     new_cards = []
     deck = player['deck']
-    for i in range(5):
+    for i in range(draw):
         # if players deck runs out, shuffle discard and make that the players deck
         if (len(deck) == 0):
             deck = deck_utils.shuffle(player['discard'], len(player['discard']))
             player['discard'] = []
 
-        # pop card off deck and put it into the new hand
+        # pop card off deck and put it into the new hand (as long as there's card to be had)
         if (len(deck) > 0):
             new_cards.append(deck.pop())
-
     player['deck'] = deck
-    player['hand'] = new_cards
+    player['hand'] += new_cards
+
     return player
 
 
@@ -101,6 +133,11 @@ def check_end_triggers(end_trigger, num_turns, marketplace):
 
 
 def check_turn_actions(player):
+    """
+    Returns how many required actions there are left in a player's turn
+    :param player: current player
+    :return: int
+    """
     curr_turn = player['current_turn']
 
     # if there's no cards to draw don't check for required draws
