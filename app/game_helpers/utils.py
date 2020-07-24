@@ -156,10 +156,11 @@ def check_turn_actions(player):
             del curr_turn['play']
 
     # sum up all the required actions left (and if there's infinite of one available, give it a positive value)
-    return sum(
-        [int(
-            curr_turn[action_type].get('required', 0) if int(curr_turn[action_type].get('required', 0)) > -1 else 1
-        ) for action_type in list(curr_turn)])
+    return sum([
+        int(curr_turn[action_type].get('required', 0) or 0)
+        if int(curr_turn[action_type].get('required', 0) or 0) > -1
+        else 1
+        for action_type in list(curr_turn)])
 
 
 def calculate_stats(game):

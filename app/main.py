@@ -233,6 +233,19 @@ class Game(Resource):
 
 @api.route('/games/<path:game_id>')
 class Game(Resource):
+    def clean_turn_actions(self, actions):
+        """
+        Convert empty strings to 0's for all action qtys
+        :param actions: dictionary where the keys are action_types and the values are dictionaries
+        :return: dictionary
+        """
+        for action, qtys in actions.items():
+            if (qtys.get('required', '') == ''):
+                actions[action]['required'] = 0
+            if (qtys.get('optional', '') == ''):
+                actions[action]['optional'] = 0
+        return actions
+
     def get(self, game_id):
         """
         Look up and return game by id
@@ -262,9 +275,9 @@ class Game(Resource):
                 'starting_deck': api.payload['startingDeck'],
                 'starting_hand_size': int(api.payload['handSize']),
                 'turn': {
-                    'pre': api.payload.get('turn', dict()).get('pre', dict()),
-                    'during': api.payload.get('turn', dict()).get('during', dict()),
-                    'post': api.payload.get('turn', dict()).get('post', dict())
+                    'pre': self.clean_turn_actions(api.payload.get('turn', dict()).get('pre', dict())),
+                    'during': self.clean_turn_actions(api.payload.get('turn', dict()).get('during', dict())),
+                    'post': self.clean_turn_actions(api.payload.get('turn', dict()).get('post', dict()))
                 },
                 'end_trigger': api.payload.get('end_trigger', {'turns': 10})
             }
