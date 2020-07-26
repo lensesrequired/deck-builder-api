@@ -45,10 +45,11 @@ def start_turn(player, settings):
     draw = int(actions.get('draw', dict()).get('required', 0))
 
     # discard cards
-    if (discard):
+    if (discard == -1):
         for card in player['hand']:
             card['played'] = False
             player['discard'].append(card)
+        player['hand'] = []
 
     # draw new cards
     new_cards = []
@@ -86,10 +87,11 @@ def end_turn(player, settings):
     draw = int(actions.get('draw', dict()).get('required', 0))
 
     # discard cards
-    if (discard):
+    if (discard == -1):
         for card in player['hand']:
             card['played'] = False
             player['discard'].append(card)
+        player['hand'] = []
 
     # draw new cards
     new_cards = []
