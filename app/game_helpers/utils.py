@@ -21,7 +21,7 @@ def setup_player(index, settings):
     # add individuals of that card for the correct quantity as specified in the settings
     # then shuffle it and set it as the players deck
     starting_deck = [card for card in settings['starting_deck'] for i in range(int(card['qty']))]
-    player['deck'] = deck_utils.shuffle(starting_deck, len(player['deck']))
+    player['deck'] = deck_utils.shuffle(starting_deck, len(starting_deck))
 
     # grab the user specified starting hand size off the deck and set that as the player's hand
     hand = []
