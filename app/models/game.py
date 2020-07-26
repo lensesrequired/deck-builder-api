@@ -5,11 +5,18 @@ from . import action
 
 def TurnModel(api):
     m = {
-        "pre": fields.List(fields.Nested(action.model(api))),
-        "during": fields.List(fields.Nested(action.model(api))),
-        "post": fields.List(fields.Nested(action.model(api))),
+        "pre": fields.Nested(action.turn_action(api)),
+        "during": fields.Nested(action.turn_action(api)),
+        "post": fields.Nested(action.turn_action(api))
     }
     return api.model("turn", m)
+
+
+def TriggerModel(api):
+    m = {
+        "'turn' or 'piles'": fields.Integer
+    }
+    return api.model("trigger", m)
 
 
 def SettingsModel(api):
@@ -52,3 +59,14 @@ def GameModel(api):
 
 def model(api):
     return api.model("game", GameModel(api))
+
+
+def settings(api):
+    return api.model("game_settings", {
+        "numPlayers": fields.Integer(min=1),
+        "startingDeck": DeckModel(api),
+        "handSize": fields.Integer,
+        "turn": fields.Nested(TurnModel(api)),
+        "end_trigger": fields.Nested(TriggerModel(api)),
+        "marketplace": DeckModel(api)
+    })

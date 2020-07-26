@@ -12,5 +12,20 @@ ActionModel = {
 }
 
 
-def model(api):
-    return api.model("action", ActionModel)
+def card_action(api):
+    return api.model("card_action", ActionModel)
+
+
+def turn_action_qtys(api):
+    m = {
+        "required": fields.Integer,
+        "optional": fields.Integer
+    }
+    return api.model("turn_action_qtys", m)
+
+
+def turn_action(api):
+    m = {
+        "action_type": fields.Nested(turn_action_qtys(api)),
+    }
+    return api.model("turn_action", m)

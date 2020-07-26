@@ -28,6 +28,7 @@ api = Api(app,
 
 CardModel = card.model(api)
 GameModel = game.model(api)
+GameSettingsModel = game.settings(api)
 
 try:
     client = pymongo.MongoClient(
@@ -139,7 +140,7 @@ class DeckImages(Resource):
 
 
 @api.route('/deck/<path:deck_id>/pdf/<path:download_id>')
-class Deck(Resource):
+class DeckPDF(Resource):
     def get(self, deck_id, download_id):
         """
         Creates a pdf file of all the cards from a user created deck in the correct quantities
@@ -260,7 +261,10 @@ class Game(Resource):
             return jsonify(game)
         raise abort(404, "Game could not be found")
 
-    @api.expect(GameModel)
+
+@api.route('/games/<path:game_id>/settings')
+class Game(Resource):
+    @api.expect(GameSettingsModel)
     def patch(self, game_id):
         """
         Update settings and marketplace for a give game id
@@ -292,7 +296,7 @@ class Game(Resource):
 
 
 @api.route('/games/<path:game_id>/start')
-class Game(Resource):
+class Gameplay(Resource):
     def post(self, game_id):
         """
         Start a game by setting the players based on the settings and the current player to the first player

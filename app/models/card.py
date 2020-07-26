@@ -4,10 +4,12 @@ from . import action
 
 def CardModel(api):
     m = {
+        "id": fields.String,
+        "modified_at": fields.String,
         "qty": fields.Integer,
         "art": fields.String,
         "name": fields.String,
-        "actions": fields.List(fields.Nested(action.model(api))),
+        "actions": fields.List(fields.Nested(action.card_action(api))),
         "costBuy": fields.Integer(min=0),
         "buyingPower": fields.Integer,
         "victoryPoints": fields.Integer
