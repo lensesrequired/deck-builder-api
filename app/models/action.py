@@ -26,6 +26,6 @@ def turn_action_qtys(api):
 
 def turn_action(api):
     m = {
-        "action_type": fields.Nested(turn_action_qtys(api)),
+        "any of [draw, action, buy, discard, destroy]": fields.Nested(turn_action_qtys(api)),
     }
     return api.model("turn_action", m)
