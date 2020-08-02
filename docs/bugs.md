@@ -1,5 +1,5 @@
-##Known Bugs
+## Known Bugs
 None at the moment
 
-##Future Improvements
+## Future Improvements
 1) Better type handling
