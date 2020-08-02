@@ -1,5 +1,9 @@
 from ..deck_helpers import utils as deck_utils
 
+"""
+The various utilities needed to act on a game
+"""
+
 
 def setup_player(index, settings):
     """

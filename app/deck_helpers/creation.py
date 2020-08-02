@@ -1,6 +1,10 @@
 from PIL import Image
 from ..card_helpers import creation as card_creation
 
+"""
+The various utilities needed to create a deck
+"""
+
 # the pdf image's positions for the top left corner of a given card index
 positions = {
     0: (30, 45),
