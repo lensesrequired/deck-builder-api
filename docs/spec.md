@@ -1,37 +1,37 @@
 ## General Description
 
-This project is two parts, the first part being a UI written in React and deployed using Vercel that is simply a nice interface for a Python API, deployed using Heroku. This API facilitates 1) deck building card game creation (making the cards to play) and 2) deck building card game playing. A deck building game example can be found here. I am a frontend web developer by profession and use React on the daily, so the idea is a Flask backend with a React frontend. 
-For the first part, the creation of a deck, the API supports a set of card attributes that the user can specify and configure. Using those, the API creates cards that the user could print and play. Users can also choose from a set of art to use as a background for a card. This is implemented using Pillow. In order to have a nice intermediate way to test the API, flask-restx will be used to supply Swagger integration and convenient modelling.
-For the second part, these cards are of a playable game online. This game is playable on a local machine where you pass the laptop. This part takes more data from the user about the rules of the game they want to set up and will implement these rules programmatically (so card shuffling, hand drawing, etc will be implemented by the API). To do this, a database is required. Mongo, a noSQL database has a nice client library and is flexible with its data structures as a noSQL database.
+This project contains a Python API, deployed using Heroku, that facilitates 1) custim card designing and 2) deck building card game playing.
 
-## User Flow
+For the first part, the creation of a deck, the API supports a set of card attributes that the user can specify and configure. Using those, the API creates cards that the user could print and play. Users can also choose from a set of art to use as a background for a card. This is implemented using Pillow. In order to have a nice intermediate way to test the API, flask-restx will be used to supply Swagger integration and convenient modelling.
+
+For the second part, a set of cards can be specified to be used for a game. This part takes more data from the user about the rules of the game they want to set up and will automate these rules (ie card shuffling, hand drawing, etc). To do this, a database is required. Mongo, a noSQL database, is what's used.
+
+## Use Cases
+
+These use cases asumes a GUI in front of the API endpoints in order to give an idea of how a user will expect the API to act.
 
 #### GUI Deck Creator
 
-This user lands on the web app and is shown a Create a Deck page. To start creating a deck, they click Add Card. This pops up a dialog box where the user can pick out art and input card details such as name, description, action, cost, point value, etc.. Picking out the art, there will be a library of art to choose from, by clicking on the Art space, they’ll have another dialog box that shows them the choices, allows them to filter, etc.. The inputs will be mostly textboxes where they just free form enter text or numbers. Once all the fields are entered (or as many of them as the user so chooses), they will click an Add button.
-The dialog box will close and in the space below the button on the Create a Deck page, there will be a preview of the card they just created and a text box for them to enter the Quantity they will want in their deck (the default is 1). 
-The user will continue to add cards until they have created their entire deck. When they are finished adding cards, they can choose to Export them by button click. This will download a PDF they can print out and cut in order to use the cards. 
-- The art is served from another Vercel project (https://deck-builder-cards.now.sh/)
-- When creating the card for display, PIL/Pillow will be used to put the text on the image. All images will have a similar overlay.
-- Cards will need some way to be rendered less frequently than every call but cannot be stored in Mongo with the rest of the data due to storage limitations.
-- PDF will also be created using Pil/Pillow.
+This user lands on the web app, is shown a Create a Deck page, and is assigned a deck id in order to have persistent editing of the deck if they want to make adjustments at a later date. To start creating a deck, they add a single card by picking out a piece of provided art and inputting card details such as name, description, action, cost, point value, qty, etc.. When picking out the art, there will be a library of art to choose from. Once all the fields are entered (or as many of them as the user so chooses), they will submit the card. They can now retrieve the card's image that has the specified background art and text. If the user decides not to choose an art, the background will be all white. 
+
+The user will continue to add cards until they have created their entire deck and along the way, users should also be able to go back and edit cards. When they are happy with their deck, they can choose to Export them to JSON that they can use to upload them easily into the editor another time or to a PDF that they can print out and cut in order to use the cards. 
 
 #### Upload Deck Creator
 
-This user lands on the web app and is shown a Create a Deck page. Instead of clicking Add Card, this user clicks Upload and chooses a file from their computer. Turns out, this file is not in the correct format though! The user is shown a dialog with an error and given the option to download a template (this template is also available from the original screen). The user downloads the template and now uses it to see where the data he provided wasn’t quite right (turns out he forgot the required field of Name).
-Once his file is fixed he uploads it through the same flow as before, this time all the cards in his JSON get thrown into the space below the buttons. He’s now able to click on a given card to make finishing touches through the same dialog the GUI User used or edit quantities of cards. Just like the previous user, he can now export his deck as actual cards.
-- Pretty much same details as above
-- Flask-restx will convert the data given by the client side into Python lists and dictionaries auto-magically making it easy to parse through.
+This user starts out similarly to the GUI Deck Creator, but instead of creating cards one by one, they want to upload a JSON file containing all the information from their cards. They upload the file and are now able to select and edit any given card that was uploaded to make finishing touches through the same editing method as the GUI User. Just like the previous user, he can now export his deck as JSON or actual cards.
 
 #### Game Player
 
-This user creates a deck, like either of the users above, except instead of exporting the desk, she chooses to click Play Game! She is directed to a new page which pops up a dialog box that allows her to set up a game, it asks for how many players there are, what the starting hand size is what the starting player deck consists of, what cards belong on the table to be purchased, what a turn consists of, and what the triggers are for the end of the game. Once she hits the submit button on this dialog, the dialog disappears and the page loads up her game.
-The rest of her actions are playing out the game based on the parameters she gave. The decks will be laid out with the cards she specified and she’ll be able to see her hand. The game creator always gets to go first so she will see her hand and take her turn. On her turn, she will go through the sequences she specified, usually a certain number of actions (buying or playing cards), discarding her remaining cards, and redrawing her next hand. She will then click the Next Player button and her hand will hide and she can pass the laptop to the next player. That player will click Start Turn and then will go through the same actions the game creator did.
-Once the conditions for the end of a game are met, the end of the game is triggered and the game will display the number of victory points in every player's deck and a winner is announced. 
-- The game state should be tracked server/Flask side and React will just render what it’s given.
+This user creates a deck like either of the users above, except instead of exporting the deck, they choose to play a game with it! They are instructed to first set up the rules and gameplay. These will include things like how many players there are, what the starting hand size is, what the starting player deck consists of, what cards belong on the table to be purchased, what a turn consists of, and what the triggers are for the end of the game. Once they are submitted, a game is started!
 
-## Technical Flow
+The rest of their actions are playing out the game based on the parameters the user gave. On a players turn they will go through the sequences they specified, usually a certain number of actions (buying or playing cards), discarding their remaining cards, and redrawing their next hand. They can then end their turn and the next player will start their turn and play it through just as the first player did. 
 
-![Flow Key](./images/flow_key.png)
-![Game Flow](./images/game_flow.png)
-![Create](./images/create_flow.png)
+Once the conditions for the end of a game are met (such as a certain number of turns played or so many cards bought from the market place), the end of the game is triggered and the game will display the number of victory points in every player's deck and a winner is announced. 
+
+## Action Flows
+
+These flows show the different actions and interactions a user will expect between themselves, a view, and this API.
+
+<img alt="Flow Key" src="./images/flow_key.png" width="500"/>
+<img alt="Game Flow" src="./images/game_flow.png" width="750"/>
+<img alt="Create Flow" src="./images/create_flow.png" width="750"/>
