@@ -267,8 +267,38 @@ class Game(Resource):
         return str(game_id)
 
 
+@api.route('/games/<path:game_id>')
+class Game(Resource):
+    def get(self, game_id):
+        """
+        Look up and return game by id
+        :param game_id: string
+        :return: Game object
+        """
+        # look up game and return 404 if it doesn't exist
+        game = lookupGame(game_id)
+        if (game is not None):
+            # id needs to be casted to string since object id isn't json-ready
+            game['_id'] = str(game['_id'])
+            return jsonify(game)
+        raise abort(404, "Game could not be found")
+
+
 @api.route('/games/<path:game_id>/settings')
 class Game(Resource):
+    def clean_turn_actions(self, actions):
+        """
+        Convert empty strings to 0's for all action qtys
+        :param actions: dictionary where the keys are action_types and the values are dictionaries
+        :return: dictionary
+        """
+        for action, qtys in actions.items():
+            if (qtys.get('required', '') == ''):
+                actions[action]['required'] = 0
+            if (qtys.get('optional', '') == ''):
+                actions[action]['optional'] = 0
+        return actions
+
     @api.expect(GameSettingsModel)
     def patch(self, game_id):
         """
