@@ -4,6 +4,10 @@ from PIL import Image, ImageDraw, ImageFont
 import requests
 import textwrap
 
+"""
+The various utilities needed to create a card
+"""
+
 
 def get_photo(photo_type, name):
     """

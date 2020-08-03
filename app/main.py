@@ -17,6 +17,7 @@ from bson.errors import InvalidId
 import base64
 import os
 
+# create flask app
 app = Flask(__name__)
 cors = CORS(app)
 app.wsgi_app = ProxyFix(app.wsgi_app)
@@ -26,10 +27,12 @@ api = Api(app,
           description='This is API'
           )
 
+# create models
 CardModel = card.model(api)
 GameModel = game.model(api)
 GameSettingsModel = game.settings(api)
 
+# set up database access
 try:
     client = pymongo.MongoClient(
         "mongodb+srv://dbUser:some-password@deckbuilder-crpyz.mongodb.net/deckbuilder?retryWrites=true&w=majority")
@@ -55,17 +58,7 @@ def lookupGame(id):
         raise BadRequest(str(e))
 
 
-@api.route('/photo/<path:photo_type>')
-class Photo(Resource):
-    def get(self, photo_type):
-        """
-        Returns all of the file names for photos of a specified type (ie characters, items, or places)
-        :param photo_type:string
-        :return:list of file names
-        """
-        # look up the list of file names or return empty list if the type doesn't exist
-        return jsonify(art_files.card_types.get(photo_type, []))
-
+# write routes
 
 @api.route('/deck')
 class Deck(Resource):
@@ -97,6 +90,37 @@ class Deck(Resource):
             deck['_id'] = str(deck['_id'])
             return jsonify(deck)
         raise abort(404, "Deck could not be found")
+
+
+@api.route('/photo/<path:photo_type>')
+class Photo(Resource):
+    def get(self, photo_type):
+        """
+        Returns all of the file names for photos of a specified type (ie characters, items, or places)
+        :param photo_type:string
+        :return:list of file names
+        """
+        # look up the list of file names or return empty list if the type doesn't exist
+        return jsonify(art_files.card_types.get(photo_type, []))
+
+
+@api.route('/cards/<path:deck_id>')
+class Card(Resource):
+    @api.expect([CardModel])
+    def put(self, deck_id):
+        """
+        Replaces the cards of a deck and if the deck doesn't exist, creates it
+        :param deck_id: string
+        :return: OK or error
+        """
+        # look up deck or create it if it doesn't exist
+        deck = lookupDeck(deck_id)
+        if (deck is not None):
+            decksCollection.update_one({'_id': deck['_id']}, {"$set": {"cards": api.payload}})
+            return "OK"
+
+        decksCollection.insert_one({'_id': ObjectId(deck_id), 'cards': api.payload})
+        return "OK"
 
 
 @api.route('/deck/images/<path:deck_id>')
@@ -181,23 +205,34 @@ class DeckPDF(Resource):
         raise abort(404, "Deck could not be found")
 
 
-@api.route('/cards/<path:deck_id>')
-class Card(Resource):
-    @api.expect([CardModel])
-    def put(self, deck_id):
+@api.route('/games/<path:game_id>')
+class Game(Resource):
+    def clean_turn_actions(self, actions):
         """
-        Replaces the cards of a deck and if the deck doesn't exist, creates it
-        :param deck_id: string
-        :return: OK or error
+        Convert empty strings to 0's for all action qtys
+        :param actions: dictionary where the keys are action_types and the values are dictionaries
+        :return: dictionary
         """
-        # look up deck or create it if it doesn't exist
-        deck = lookupDeck(deck_id)
-        if (deck is not None):
-            decksCollection.update_one({'_id': deck['_id']}, {"$set": {"cards": api.payload}})
-            return "OK"
+        for action, qtys in actions.items():
+            if (qtys.get('required', '') == ''):
+                actions[action]['required'] = 0
+            if (qtys.get('optional', '') == ''):
+                actions[action]['optional'] = 0
+        return actions
 
-        decksCollection.insert_one({'_id': ObjectId(deck_id), 'cards': api.payload})
-        return "OK"
+    def get(self, game_id):
+        """
+        Look up and return game by id
+        :param game_id: string
+        :return: Game object
+        """
+        # look up game and return 404 if it doesn't exist
+        game = lookupGame(game_id)
+        if (game is not None):
+            # id needs to be casted to string since object id isn't json-ready
+            game['_id'] = str(game['_id'])
+            return jsonify(game)
+        raise abort(404, "Game could not be found")
 
 
 @api.route('/games/create/<path:deck_id>')
@@ -396,7 +431,6 @@ class GamePlayerCard(Resource):
         :param action_type: string (buy, destroy, discard, draw, or play)
         :return: OK or error
         """
-        # TODO: Verify action is allowed
         # look up game and return 404 if it doesn't exist
         game = lookupGame(game_id)
         if (game is not None):

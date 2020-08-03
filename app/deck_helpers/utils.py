@@ -1,5 +1,9 @@
 from random import randint
 
+"""
+The various utilities needed to act on a deck
+"""
+
 
 def shuffle(cards, n):
     """

@@ -1,3 +1,6 @@
+"""
+A file containing the list of different art files available to a user
+"""
 card_types = {
     "characters": [
         "01.png",

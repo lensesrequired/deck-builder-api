@@ -1,5 +1,9 @@
 from ..deck_helpers import utils as deck_utils
 
+"""
+The various utilities needed to act on a card
+"""
+
 
 def use_action(turn, action_type):
     """
