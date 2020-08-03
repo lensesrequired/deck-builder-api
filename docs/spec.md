@@ -39,12 +39,15 @@ These flows show the different actions and interactions a user will expect betwe
 ## GUI Examples
 
 Deck Builder and Card Editor
+
 <img alt="DeckBuilder" src="./images/DeckBuilder.png" width="500"/>
 <img alt="CardEditor" src="./images/CardEditor.png" width="500"/>
 
 Settings
+
 <img alt="GameSettings" src="./images/GameSettings.png" width="500"/>
 <img alt="TurnSettings" src="./images/TurnSettings.png" width="500"/>
 
 Gameplay
+
 <img alt="Gameplay" src="./images/Gameplay.png" width="500"/>
