@@ -14,17 +14,15 @@ There is a separate JS GUI designed for this API. The code is here: https://gith
 
 Deck Builder and Card Editor
 
-<img alt="DeckBuilder" src="./docs/images/DeckBuilder.png" width="250"/>
-<img alt="CardEditor" src="./docs/images/CardEditor.png" width="250"/>
+<img alt="DeckBuilder" src="./docs/images/DeckBuilder.png" width="450"/><img alt="CardEditor" src="./docs/images/CardEditor.png" width="450"/>
 
 Settings
 
-<img alt="GameSettings" src="./docs/images/GameSettings.png" width="250"/>
-<img alt="TurnSettings" src="./docs/images/TurnSettings.png" width="250"/>
+<img alt="GameSettings" src="./docs/images/GameSettings.png" width="450"/><img alt="TurnSettings" src="./docs/images/TurnSettings.png" width="450"/>
 
 Gameplay
 
-<img alt="Gameplay" src="./docs/images/Gameplay.png" width="250"/>
+<img alt="Gameplay" src="./docs/images/Gameplay.png" width="450"/>
 
 ### File structure:
 - wsgi.py: imports and runs the app
