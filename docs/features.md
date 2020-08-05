@@ -26,3 +26,8 @@
 
 1) Required actions must be done before optional ones
 2) Users specify which cards cost a play
+3) Create response model documentation to show what responses a user should expect in the Swagger Doc
+4) Allow for more card actions (peeking, forcing others to discard, etc)
+5) Allow for a marketplace that changes throughout the course of a game
+6) Implement sockets or something to allow for game updating across different computers running the same game
+7) Protect games so only users with a passcode can use them
