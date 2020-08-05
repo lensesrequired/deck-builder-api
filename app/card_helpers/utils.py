@@ -11,6 +11,7 @@ def use_action(turn, action_type):
     :param turn: current player's turn
     :param action_type: type of action
     :return: None
+    :raises: Action not allowed
     """
     if (turn.get(action_type)):
         required_qty = turn[action_type].get('required', 0)
@@ -116,6 +117,7 @@ def buy_card(game, args):
     :param game: game
     :param args: query from http request
     :return: update game
+    :raises: Action not allowed
     """
     marketplace = game['marketplace']
     # get the current player from game and index from query args

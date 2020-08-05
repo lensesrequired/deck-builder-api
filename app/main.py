@@ -65,7 +65,7 @@ class Deck(Resource):
     def post(self):
         """
         Creates a new empty deck an returns the DB ID of the new deck
-        :return: string
+        :return: new deck id (string)
         """
         new_deck = {
             'cards': []
@@ -81,7 +81,8 @@ class Deck(Resource):
         """
         Look up and return a user created deck of cards by id
         :param deck_id: string
-        :return: Deck object (contains array Cards)
+        :return: Deck object (contains array of Cards)
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # look up deck and return 404 if it doesn't exist
         deck = lookupDeck(deck_id)
@@ -98,7 +99,7 @@ class Photo(Resource):
         """
         Returns all of the file names for photos of a specified type (ie characters, items, or places)
         :param photo_type:string
-        :return:list of file names
+        :return: list of file names
         """
         # look up the list of file names or return empty list if the type doesn't exist
         return jsonify(art_files.card_types.get(photo_type, []))
@@ -111,7 +112,8 @@ class Card(Resource):
         """
         Replaces the cards of a deck and if the deck doesn't exist, creates it
         :param deck_id: string
-        :return: OK or error
+        :return: "OK"
+        :raises: 400 (Bad Request)
         """
         # look up deck or create it if it doesn't exist
         deck = lookupDeck(deck_id)
@@ -133,6 +135,7 @@ class DeckImages(Resource):
         otherwise returns only image of card id requested (still in an array)
         :param deck_id: string
         :return: list of image objects (objects contain image itself, card id, and the last time it was modified)
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # look up deck and return 404 if it doesn't exist
         deck = lookupDeck(deck_id)
@@ -170,7 +173,8 @@ class DeckPDF(Resource):
         Creates a pdf file of all the cards from a user created deck in the correct quantities
         :param deck_id: string
         :param download_id: string
-        :return: pdf file
+        :return: pdf file of all card images from deck
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # look up deck and return 404 if it doesn't exist
         deck = lookupDeck(deck_id)
@@ -211,7 +215,7 @@ class Game(Resource):
         """
         Convert empty strings to 0's for all action qtys
         :param actions: dictionary where the keys are action_types and the values are dictionaries
-        :return: dictionary
+        :return: cleaned dictionary of actions
         """
         for action, qtys in actions.items():
             if (qtys.get('required', '') == ''):
@@ -225,6 +229,7 @@ class Game(Resource):
         Look up and return game by id
         :param game_id: string
         :return: Game object
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # look up game and return 404 if it doesn't exist
         game = lookupGame(game_id)
@@ -241,7 +246,7 @@ class Game(Resource):
         """
         Creates a new game with the specified deck and returns the created game's id
         :param deck_id: string
-        :return: string
+        :return: New Game ID (string)
         """
         new_game = {
             'deck_id': deck_id,
@@ -274,6 +279,7 @@ class Game(Resource):
         Look up and return game by id
         :param game_id: string
         :return: Game object
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # look up game and return 404 if it doesn't exist
         game = lookupGame(game_id)
@@ -290,7 +296,7 @@ class Game(Resource):
         """
         Convert empty strings to 0's for all action qtys
         :param actions: dictionary where the keys are action_types and the values are dictionaries
-        :return: dictionary
+        :return: cleared dictionary of actions
         """
         for action, qtys in actions.items():
             if (qtys.get('required', '') == ''):
@@ -304,7 +310,8 @@ class Game(Resource):
         """
         Update settings and marketplace for a give game id
         :param game_id: string
-        :return: OK or error
+        :return: "OK"
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # look up game and return 404 if it doesn't exist
         game = lookupGame(game_id)
@@ -337,6 +344,7 @@ class Gameplay(Resource):
         Start a game by setting the players based on the settings and the current player to the first player
         :param game_id: string
         :return: game object
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # look up game and return 404 if it doesn't exist
         game = lookupGame(game_id)
@@ -362,7 +370,8 @@ class GamePlayer(Resource):
         """
         Update current player's turn into started state
         :param game_id: string
-        :return: OK or error
+        :return: "OK"
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # TODO: Check and do pre-turn actions
         # look up game and return 404 if it doesn't exist
@@ -383,7 +392,8 @@ class GamePlayer(Resource):
         """
         Update current player's turn into ended state and set the next player as current
         :param game_id: string
-        :return: OK or error
+        :return: "OK"
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # TODO: Check and do post-turn actions
         # look up game and return 404 if it doesn't exist
@@ -429,7 +439,8 @@ class GamePlayerCard(Resource):
         Update game/current player with effects of a card action
         :param game_id: string
         :param action_type: string (buy, destroy, discard, draw, or play)
-        :return: OK or error
+        :return: "OK"
+        :raises: 400 (Bad Request), 404 (Not found)
         """
         # look up game and return 404 if it doesn't exist
         game = lookupGame(game_id)
