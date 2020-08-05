@@ -131,9 +131,17 @@ def buy_card(game, args):
 
     # use a buy
     use_action(player['current_turn'], 'buy')
-    # use buying power equal to the cost to buy the card
-    for i in range(int(c['costBuy'])):
-        use_action(player['current_turn'], 'buying_power')
+
+    # get the required and optional buying power left in player's turn
+    total_user_buying_power = player['current_turn']['buying_power'].get('required', 0) + player['current_turn'][
+        'buying_power'].get('optional', 0)
+    # make sure player has enough buying power for the card and disallow the action if he doesn't
+    if (int(c['costBuy']) <= total_user_buying_power):
+        # use buying power equal to the cost to buy the card
+        for i in range(int(c['costBuy'])):
+            use_action(player['current_turn'], 'buying_power')
+    else:
+        raise Exception("Action not allowed")
 
     # update the game's marketplace and players
     game['marketplace'] = marketplace
