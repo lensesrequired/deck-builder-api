@@ -1,6 +1,6 @@
 # Deck Builder API
 
-This project contains a Python API, deployed using Heroku, that facilitates 1) custom card designing and 2) deck building card game playing.
+This project contains a Python API, deployed using Heroku, that facilitates 1) custom card designing and 2) deck building card game playing. For more details on how a game is supposed to be played, check out <a href="https://youtu.be/5jNGpgdMums">this video</a> that walks through a classic example of a deck building game that was my inspiration for this program.
 
 For the first part, the creation of a deck, the API supports a set of card attributes that the user can specify and configure. Using those, the API creates cards that the user could print and play. Users can also choose from a set of art to use as a background for a card. This is implemented using Pillow. In order to have a nice intermediate way to test the API, flask-restx will be used to supply Swagger integration and convenient modelling.
 
