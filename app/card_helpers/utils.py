@@ -99,7 +99,7 @@ def play_card(game, args):
         add_action(player['current_turn'], action)
     # if the card had actions, then we use an action from the current player's turn
     if len(actions):
-        use_action(player['current_turn'], 'action')
+        use_action(player['current_turn'], 'play')
 
     # add the buying power from the card to the players turn
     add_action(player['current_turn'],
