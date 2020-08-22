@@ -51,7 +51,7 @@ class DeckImages(Resource):
                 # create an image object with the PIL image
                 img_io = io.BytesIO()
                 img.save(img_io, format='PNG')
-                images.append({'id': card_data.get('id', ''),
+                images.append({'_id': card_data.get('_id', ''),
                                'data': base64.encodebytes(img_io.getvalue()).decode('ascii'),
                                'modifiedAt': datetime.strptime(card_data['modifiedAt'][:-5],
                                                                "%Y-%m-%dT%H:%M:%S")})
