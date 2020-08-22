@@ -36,10 +36,10 @@ class DeckImages(Resource):
         """
         # look up deck and return 404 if it doesn't exist
         if (api.payload is not None):
-            deck = api.payload
+            cards = api.payload
             images = []
 
-            for card_data in deck.get('cards', []):
+            for card_data in cards:
                 # if there wasn't a card id, always create and add card image
                 # or if there is a card id only create an image for the card with that id
                 # get the background art and font color based on that
@@ -71,7 +71,7 @@ class DeckPDF(Resource):
         """
         # look up deck and return 404 if it doesn't exist
         if (api.payload is not None):
-            deck = api.payload
+            cards = api.payload
             download_id = request.args.get('download_id', 'download_id')
 
             # specify an action to take after ever request
@@ -88,7 +88,7 @@ class DeckPDF(Resource):
                 return response
 
             # create images out of cards from the deck
-            pdf_pages = deck_creator.create_pdf(deck.get('cards', []))
+            pdf_pages = deck_creator.create_pdf(cards)
 
             # convert the images which are paper size and contain up to 8 cards each to something pdf-like
             for page in pdf_pages:
