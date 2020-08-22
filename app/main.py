@@ -26,7 +26,8 @@ CardModel = card.model(api)
 
 @api.route('/deck/images/<path:download_id>')
 class DeckImages(Resource):
-    def post(self):
+    @api.expect([CardModel])
+    def post(self, download_id):
         """
         returns array of all the card images
         :param download_id: string
@@ -60,7 +61,8 @@ class DeckImages(Resource):
 
 @api.route('/deck/pdf/<path:download_id>')
 class DeckPDF(Resource):
-    def post(self):
+    @api.expect([CardModel])
+    def post(self, download_id):
         """
         Creates a pdf file of all the cards from a user created deck in the correct quantities
         :param download_id: string
