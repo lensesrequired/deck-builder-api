@@ -5,7 +5,7 @@ from . import action
 def CardModel(api):
     m = {
         "id": fields.String,
-        "modified_at": fields.String,
+        "modifiedAt": fields.String,
         "qty": fields.Integer,
         "art": fields.String,
         "name": fields.String,

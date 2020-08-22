@@ -53,8 +53,8 @@ class DeckImages(Resource):
                 img.save(img_io, format='PNG')
                 images.append({'id': card_data.get('id', ''),
                                'data': base64.encodebytes(img_io.getvalue()).decode('ascii'),
-                               'modified_at': datetime.strptime(card_data['modified_at'][:-5],
-                                                                "%Y-%m-%dT%H:%M:%S")})
+                               'modifiedAt': datetime.strptime(card_data['modifiedAt'][:-5],
+                                                               "%Y-%m-%dT%H:%M:%S")})
             return jsonify(images)
         raise abort(404, "Deck could not be found")
 

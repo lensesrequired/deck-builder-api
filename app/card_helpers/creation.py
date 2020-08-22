@@ -101,7 +101,7 @@ def create_card(card, background, font_color):
         qty = action['qty']
         required = action['required']
         # specify whether card is required or optional in the text
-        text = ("required " if required else "optional ") + action_type + " " + qty
+        text = ("required " if required else "optional ") + action_type + " " + str(qty)
         # increase height to ensure next line doesn't cover this one
         height += create_center_text(text, draw, width, height, reg_font, font_color)
     if (buying_power):
