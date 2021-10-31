@@ -1,3 +1,5 @@
+## Note: Parts of this API have been moved to a Javascript Api. This Api's purpose is not just to allow custom card designing.
+
 # Deck Builder API
 
 This project contains a Python API, deployed using Heroku, that facilitates 1) custom card designing and 2) deck building card game playing. For more details on how a game is supposed to be played, check out <a href="https://youtu.be/5jNGpgdMums">this video</a> that walks through a classic example of a deck building game that was my inspiration for this program.
